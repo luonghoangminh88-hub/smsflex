@@ -3,6 +3,8 @@ import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
 import { checkStatus, finishActivation } from "@/lib/multi-provider-client"
 import type { Provider } from "@/lib/multi-provider-client"
+import { notifyOtpReceived, notifyRentalExpired } from "@/lib/notification-service"
+import { calculateRefund, processRefund } from "@/lib/refund"
 
 export async function POST(request: Request) {
   try {
@@ -18,7 +20,6 @@ export async function POST(request: Request) {
       },
     })
 
-    // Get current user
     const {
       data: { user },
     } = await supabase.auth.getUser()
@@ -26,7 +27,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // Get rental
     const { data: rental } = await supabase
       .from("phone_rentals")
       .select("*")
@@ -38,7 +38,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Rental not found" }, { status: 404 })
     }
 
-    // If OTP already received, return it
     if (rental.otp_code) {
       return NextResponse.json({
         success: true,
@@ -47,14 +46,21 @@ export async function POST(request: Request) {
       })
     }
 
-    // Check if rental is expired
     if (new Date(rental.expires_at) < new Date()) {
       await supabase.from("phone_rentals").update({ status: "expired" }).eq("id", rental_id)
+
+      const refundCalculation = await calculateRefund(rental)
+      const refundResult = await processRefund(user.id, rental_id, refundCalculation)
+
+      if (refundResult.success) {
+        await notifyRentalExpired(user.id, rental.phone_number, refundCalculation.refund_amount)
+      }
 
       return NextResponse.json({
         success: false,
         status: "expired",
         message: "Rental has expired",
+        refund_amount: refundCalculation.refund_amount,
       })
     }
 
@@ -64,7 +70,6 @@ export async function POST(request: Request) {
     const status = await checkStatus(rental.activation_id, provider)
 
     if (status.status === "completed" && status.code) {
-      // Update rental with OTP code
       await supabase
         .from("phone_rentals")
         .update({
@@ -74,8 +79,9 @@ export async function POST(request: Request) {
         })
         .eq("id", rental_id)
 
-      // Finish activation
       await finishActivation(rental.activation_id, provider)
+
+      await notifyOtpReceived(user.id, rental.phone_number, status.code)
 
       return NextResponse.json({
         success: true,
@@ -94,7 +100,6 @@ export async function POST(request: Request) {
       })
     }
 
-    // Still waiting for OTP
     return NextResponse.json({
       success: false,
       status: "waiting",

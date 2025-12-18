@@ -78,20 +78,13 @@ export default async function RentPage() {
               <AlertCircle className="h-5 w-5 text-cyan-600 dark:text-cyan-400 flex-shrink-0 mt-0.5" />
               <div className="flex-1">
                 <p className="text-sm font-medium text-cyan-900 dark:text-cyan-100 mb-1">
-                  Giá tối ưu cho mọi dịch vụ để mua số điện thoại với giá tốt nhất!
+                  Giá tối ưu tự động cho mọi dịch vụ!
                 </p>
                 <p className="text-xs text-cyan-700 dark:text-cyan-300">
-                  Hệ thống tự động chọn nhà cung cấp với giá tốt nhất và tỷ lệ thành công cao nhất.
+                  Hệ thống tự động chọn nhà cung cấp có giá tốt nhất và tỷ lệ thành công cao nhất để mang đến trải
+                  nghiệm tốt nhất cho bạn.
                 </p>
               </div>
-              <Button
-                asChild
-                size="sm"
-                variant="outline"
-                className="h-7 text-xs bg-white/80 hover:bg-white dark:bg-cyan-900/30 dark:hover:bg-cyan-900/50"
-              >
-                <Link href="/dashboard/settings">Điều chỉnh</Link>
-              </Button>
             </div>
           </CardContent>
         </Card>

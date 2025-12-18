@@ -288,7 +288,8 @@ export default function AdminPaymentMethodsPage() {
                   <div>
                     <p className="text-muted-foreground">Giới hạn số tiền</p>
                     <p className="font-medium">
-                      {method.min_amount.toLocaleString("vi-VN")}đ - {method.max_amount.toLocaleString("vi-VN")}đ
+                      {(method.min_amount ?? 0).toLocaleString("vi-VN")}đ -{" "}
+                      {(method.max_amount ?? 0).toLocaleString("vi-VN")}đ
                     </p>
                   </div>
                   {method.instructions && (

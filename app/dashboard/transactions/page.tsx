@@ -1,34 +1,111 @@
-import { createClient } from "@/lib/supabase/server"
-import { redirect } from "next/navigation"
+"use client"
+
+import { useEffect, useState } from "react"
+import { createClient } from "@/lib/supabase/client"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, TrendingUp, TrendingDown } from "lucide-react"
+import { ArrowLeft, TrendingUp, TrendingDown, Filter } from "lucide-react"
 import Link from "next/link"
 import type { Transaction } from "@/lib/types"
+import { TransactionFiltersComponent, type TransactionFilters } from "@/components/transaction-filters"
+import { TransactionExport } from "@/components/transaction-export"
+import { Skeleton } from "@/components/ui/skeleton"
 
-export default async function TransactionsPage() {
-  const supabase = await createClient()
+export default function TransactionsPage() {
+  const [transactions, setTransactions] = useState<Transaction[]>([])
+  const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([])
+  const [loading, setLoading] = useState(true)
+  const [showFilters, setShowFilters] = useState(false)
+  const supabase = createClient()
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  useEffect(() => {
+    loadTransactions()
+  }, [])
 
-  if (!user) {
-    redirect("/auth/login")
+  const loadTransactions = async () => {
+    setLoading(true)
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    if (!user) return
+
+    const { data } = await supabase
+      .from("transactions")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+
+    if (data) {
+      setTransactions(data)
+      setFilteredTransactions(data)
+    }
+    setLoading(false)
   }
 
-  const { data: transactions } = await supabase
-    .from("transactions")
-    .select("*")
-    .eq("user_id", user.id)
-    .order("created_at", { ascending: false })
+  const handleFilterChange = (filters: TransactionFilters) => {
+    let filtered = [...transactions]
 
-  // Calculate statistics
-  const totalDeposits = transactions?.filter((t) => t.type === "deposit").reduce((sum, t) => sum + t.amount, 0) || 0
+    if (filters.type) {
+      filtered = filtered.filter((t) => t.type === filters.type)
+    }
+
+    if (filters.status) {
+      filtered = filtered.filter((t) => t.status === filters.status)
+    }
+
+    if (filters.dateFrom) {
+      filtered = filtered.filter((t) => new Date(t.created_at) >= filters.dateFrom!)
+    }
+
+    if (filters.dateTo) {
+      const endOfDay = new Date(filters.dateTo)
+      endOfDay.setHours(23, 59, 59, 999)
+      filtered = filtered.filter((t) => new Date(t.created_at) <= endOfDay)
+    }
+
+    if (filters.minAmount !== undefined) {
+      filtered = filtered.filter((t) => Math.abs(t.amount) >= filters.minAmount!)
+    }
+
+    if (filters.maxAmount !== undefined) {
+      filtered = filtered.filter((t) => Math.abs(t.amount) <= filters.maxAmount!)
+    }
+
+    if (filters.search) {
+      const searchLower = filters.search.toLowerCase()
+      filtered = filtered.filter((t) => t.description?.toLowerCase().includes(searchLower))
+    }
+
+    setFilteredTransactions(filtered)
+  }
+
+  const handleResetFilters = () => {
+    setFilteredTransactions(transactions)
+  }
+
+  const totalDeposits =
+    filteredTransactions?.filter((t) => t.type === "deposit").reduce((sum, t) => sum + t.amount, 0) || 0
   const totalSpent =
-    transactions?.filter((t) => t.type === "rental_purchase").reduce((sum, t) => sum + Math.abs(t.amount), 0) || 0
-  const totalRefunds = transactions?.filter((t) => t.type === "refund").reduce((sum, t) => sum + t.amount, 0) || 0
+    filteredTransactions?.filter((t) => t.type === "rental_purchase").reduce((sum, t) => sum + Math.abs(t.amount), 0) ||
+    0
+  const totalRefunds =
+    filteredTransactions?.filter((t) => t.type === "refund").reduce((sum, t) => sum + t.amount, 0) || 0
+
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <Skeleton className="h-8 w-48 mb-6" />
+        <div className="grid gap-4 md:grid-cols-3 mb-8">
+          <Skeleton className="h-24" />
+          <Skeleton className="h-24" />
+          <Skeleton className="h-24" />
+        </div>
+        <Skeleton className="h-96" />
+      </div>
+    )
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -72,16 +149,32 @@ export default async function TransactionsPage() {
         </Card>
       </div>
 
+      <div className="flex items-center justify-between mb-4">
+        <Button variant="outline" onClick={() => setShowFilters(!showFilters)}>
+          <Filter className="h-4 w-4 mr-2" />
+          {showFilters ? "Ẩn bộ lọc" : "Hiện bộ lọc"}
+        </Button>
+        <TransactionExport transactions={filteredTransactions} />
+      </div>
+
+      {showFilters && (
+        <div className="mb-6">
+          <TransactionFiltersComponent onFilterChange={handleFilterChange} onReset={handleResetFilters} />
+        </div>
+      )}
+
       {/* Transaction List */}
       <Card className="border-2">
         <CardHeader>
           <CardTitle className="text-2xl">Lịch sử giao dịch</CardTitle>
-          <CardDescription>Tất cả các giao dịch của bạn</CardDescription>
+          <CardDescription>
+            Hiển thị {filteredTransactions.length} / {transactions.length} giao dịch
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          {transactions && transactions.length > 0 ? (
+          {filteredTransactions && filteredTransactions.length > 0 ? (
             <div className="space-y-4">
-              {transactions.map((transaction: Transaction) => (
+              {filteredTransactions.map((transaction: Transaction) => (
                 <div key={transaction.id} className="flex items-center justify-between border-b pb-4 last:border-0">
                   <div className="space-y-1 flex-1">
                     <div className="flex items-center gap-2">
@@ -111,10 +204,14 @@ export default async function TransactionsPage() {
             </div>
           ) : (
             <div className="text-center py-12">
-              <p className="text-muted-foreground mb-4">Bạn chưa có giao dịch nào</p>
-              <Button asChild>
-                <Link href="/dashboard/deposit">Nạp tiền ngay</Link>
-              </Button>
+              <p className="text-muted-foreground mb-4">
+                {transactions.length === 0 ? "Bạn chưa có giao dịch nào" : "Không tìm thấy giao dịch phù hợp"}
+              </p>
+              {transactions.length === 0 && (
+                <Button asChild>
+                  <Link href="/dashboard/deposit">Nạp tiền ngay</Link>
+                </Button>
+              )}
             </div>
           )}
         </CardContent>

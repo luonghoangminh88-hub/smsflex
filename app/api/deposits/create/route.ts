@@ -2,15 +2,18 @@ import { NextResponse } from "next/server"
 import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
 import { generatePaymentCode, generateTransferContent, calculateFee, generateVietQRUrl } from "@/lib/payment"
+import { depositSchema, validateAndSanitize } from "@/lib/security/api-validation"
 
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { payment_method_id, amount } = body
 
-    if (!payment_method_id || !amount || amount < 10000) {
-      return NextResponse.json({ error: "Invalid payment method or amount" }, { status: 400 })
+    const validation = validateAndSanitize(depositSchema, body)
+    if (!validation.success) {
+      return NextResponse.json({ error: validation.error }, { status: 400 })
     }
+
+    const { payment_method_id, amount } = validation.data
 
     const cookieStore = await cookies()
     const supabase = createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {

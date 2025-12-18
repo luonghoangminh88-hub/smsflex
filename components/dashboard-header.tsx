@@ -12,10 +12,10 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { useRouter } from "next/navigation"
-import { User, LogOut, Settings, Wallet, History, Receipt } from "lucide-react"
+import { User, LogOut, Settings, Wallet, History, Receipt, Shield } from "lucide-react"
 import type { Profile } from "@/lib/types"
 import { LanguageSwitcher } from "./language-switcher"
-import { NotificationCenter } from "./notification-center"
+import { NotificationBell } from "./notification-bell"
 import { useState, useEffect } from "react"
 import { useTranslation, type Locale } from "@/lib/i18n"
 import { formatVND } from "@/lib/currency"
@@ -74,6 +74,15 @@ export function DashboardHeader({ profile }: DashboardHeaderProps) {
             <a href="/dashboard/transactions" className="px-3 py-1.5 rounded-md hover:bg-white/10 transition-colors">
               {t("nav.transactions")}
             </a>
+            {profile.role === "admin" && (
+              <a
+                href="/admin"
+                className="px-3 py-1.5 rounded-md bg-white/20 hover:bg-white/30 transition-colors font-medium flex items-center gap-1.5"
+              >
+                <Shield className="h-4 w-4" />
+                <span>Quản trị</span>
+              </a>
+            )}
           </nav>
         </div>
 
@@ -83,7 +92,7 @@ export function DashboardHeader({ profile }: DashboardHeaderProps) {
             <span className="font-semibold">{formatVND(profile.balance)}</span>
           </div>
 
-          <NotificationCenter />
+          <NotificationBell />
 
           <LanguageSwitcher />
 
@@ -93,6 +102,9 @@ export function DashboardHeader({ profile }: DashboardHeaderProps) {
                 <Avatar className="h-9 w-9">
                   <AvatarFallback className="bg-white/20 text-white">{initials}</AvatarFallback>
                 </Avatar>
+                {profile.role === "admin" && (
+                  <span className="absolute -top-0.5 -right-0.5 h-3 w-3 rounded-full bg-yellow-400 border-2 border-[#4a6fa5]" />
+                )}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56" align="end">
@@ -100,9 +112,26 @@ export function DashboardHeader({ profile }: DashboardHeaderProps) {
                 <div className="flex flex-col space-y-1">
                   <p className="text-sm font-medium">{profile.full_name || "Người dùng"}</p>
                   <p className="text-xs text-muted-foreground">{profile.email}</p>
+                  {profile.role === "admin" && (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 w-fit">
+                      <Shield className="h-3 w-3" />
+                      Quản trị viên
+                    </span>
+                  )}
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
+              {profile.role === "admin" && (
+                <>
+                  <DropdownMenuItem asChild>
+                    <a href="/admin" className="font-medium">
+                      <Shield className="mr-2 h-4 w-4" />
+                      <span>Trang quản trị</span>
+                    </a>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                </>
+              )}
               <DropdownMenuItem className="sm:hidden">
                 <Wallet className="mr-2 h-4 w-4" />
                 <span>

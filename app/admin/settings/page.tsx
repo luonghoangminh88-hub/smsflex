@@ -246,7 +246,11 @@ export default function AdminSettingsPage() {
                   <p className="text-xs text-muted-foreground">Danh mục: {setting.category}</p>
                 </div>
                 <div className="text-right">
-                  <p className="font-semibold text-lg">{String(setting.value)}</p>
+                  <p className="font-semibold text-lg">
+                    {typeof setting.value === "object" && setting.value !== null
+                      ? JSON.stringify(setting.value)
+                      : String(setting.value)}
+                  </p>
                 </div>
               </div>
             ))}

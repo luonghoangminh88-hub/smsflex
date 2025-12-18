@@ -2,8 +2,6 @@
 
 import type React from "react"
 import { useSearchParams } from "next/navigation"
-
-import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -19,6 +17,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [remainingAttempts, setRemainingAttempts] = useState<number | null>(null)
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -37,31 +36,39 @@ export default function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    const supabase = createClient()
     setIsLoading(true)
     setError(null)
-
-    console.log("[v0] Starting login process for:", email)
+    setRemainingAttempts(null)
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
       })
 
-      if (error) {
-        console.error("[v0] Login error:", error)
-        throw error
+      const data = await response.json()
+
+      if (!response.ok) {
+        if (response.status === 429) {
+          setError(data.error)
+        } else {
+          setError(data.error || "Đăng nhập thất bại")
+          if (data.remainingAttempts !== undefined) {
+            setRemainingAttempts(data.remainingAttempts)
+          }
+        }
+        return
       }
 
-      console.log("[v0] Login successful, session established")
-
+      // Success
       await new Promise((resolve) => setTimeout(resolve, 500))
-
       router.push("/dashboard")
       router.refresh()
     } catch (error: unknown) {
-      console.error("[v0] Login exception:", error)
+      console.error("Login exception:", error)
       setError(error instanceof Error ? error.message : "Đã xảy ra lỗi khi đăng nhập")
     } finally {
       setIsLoading(false)
@@ -127,7 +134,12 @@ export default function LoginPage() {
                 </div>
                 {error && (
                   <Alert variant="destructive">
-                    <AlertDescription>{error}</AlertDescription>
+                    <AlertDescription>
+                      {error}
+                      {remainingAttempts !== null && remainingAttempts > 0 && (
+                        <div className="mt-1 text-sm">Còn {remainingAttempts} lần thử</div>
+                      )}
+                    </AlertDescription>
                   </Alert>
                 )}
                 <Button type="submit" className="w-full" disabled={isLoading}>

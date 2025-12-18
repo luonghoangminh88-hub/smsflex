@@ -12,6 +12,7 @@ import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { GoogleLoginButton } from "@/components/google-login-button"
+import { PasswordStrengthIndicator } from "@/components/password-strength-indicator"
 
 export default function SignupPage() {
   const [email, setEmail] = useState("")
@@ -35,8 +36,32 @@ export default function SignupPage() {
       return
     }
 
-    if (password.length < 6) {
-      setError("Mật khẩu phải có ít nhất 6 ký tự")
+    if (password.length < 8) {
+      setError("Mật khẩu phải có ít nhất 8 ký tự")
+      setIsLoading(false)
+      return
+    }
+
+    if (!/[A-Z]/.test(password)) {
+      setError("Mật khẩu phải chứa ít nhất 1 chữ hoa")
+      setIsLoading(false)
+      return
+    }
+
+    if (!/[a-z]/.test(password)) {
+      setError("Mật khẩu phải chứa ít nhất 1 chữ thường")
+      setIsLoading(false)
+      return
+    }
+
+    if (!/\d/.test(password)) {
+      setError("Mật khẩu phải chứa ít nhất 1 số")
+      setIsLoading(false)
+      return
+    }
+
+    if (!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password)) {
+      setError("Mật khẩu phải chứa ít nhất 1 ký tự đặc biệt")
       setIsLoading(false)
       return
     }
@@ -162,6 +187,7 @@ export default function SignupPage() {
                     onChange={(e) => setPassword(e.target.value)}
                     disabled={isLoading}
                   />
+                  <PasswordStrengthIndicator password={password} />
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="confirmPassword">Xác nhận mật khẩu</Label>

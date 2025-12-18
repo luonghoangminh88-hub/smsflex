@@ -3,6 +3,8 @@ import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
 import { cancelActivation } from "@/lib/multi-provider-client"
 import type { Provider } from "@/lib/multi-provider-client"
+import { calculateRefund, processRefund } from "@/lib/refund"
+import { notifyRefundProcessed } from "@/lib/notification-service"
 
 export async function POST(request: Request) {
   try {
@@ -18,7 +20,6 @@ export async function POST(request: Request) {
       },
     })
 
-    // Get current user
     const {
       data: { user },
     } = await supabase.auth.getUser()
@@ -26,7 +27,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    // Get rental
     const { data: rental } = await supabase
       .from("phone_rentals")
       .select("*")
@@ -38,8 +38,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Rental not found" }, { status: 404 })
     }
 
-    // Can only cancel active rentals without OTP
-    if (rental.status !== "active" || rental.otp_code) {
+    if (rental.status !== "active") {
       return NextResponse.json({ error: "Cannot cancel this rental" }, { status: 400 })
     }
 
@@ -48,7 +47,6 @@ export async function POST(request: Request) {
 
     await cancelActivation(rental.activation_id, provider)
 
-    // Update rental status
     await supabase
       .from("phone_rentals")
       .update({
@@ -57,33 +55,26 @@ export async function POST(request: Request) {
       })
       .eq("id", rental_id)
 
-    // Refund partial amount (50% refund on cancellation)
-    const refundAmount = Number.parseFloat(rental.price.toString()) * 0.5
+    const refundCalculation = await calculateRefund(rental)
+    const refundResult = await processRefund(user.id, rental_id, refundCalculation)
 
-    const { data: profile } = await supabase.from("profiles").select("balance").eq("id", user.id).single()
-
-    if (profile) {
-      const newBalance = Number.parseFloat(profile.balance.toString()) + refundAmount
-
-      await supabase.from("profiles").update({ balance: newBalance }).eq("id", user.id)
-
-      // Create refund transaction
-      await supabase.from("transactions").insert({
-        user_id: user.id,
-        rental_id: rental.id,
-        type: "refund",
-        amount: refundAmount,
-        balance_before: profile.balance,
-        balance_after: newBalance,
-        status: "completed",
-        description: `Refund for cancelled rental (50%) - ${provider}`,
-      })
+    if (!refundResult.success) {
+      return NextResponse.json({ error: refundResult.error }, { status: 500 })
     }
+
+    await notifyRefundProcessed(
+      user.id,
+      refundCalculation.refund_amount,
+      refundCalculation.reason,
+      refundCalculation.refund_percentage,
+    )
 
     return NextResponse.json({
       success: true,
-      refund_amount: refundAmount,
-      message: "Rental cancelled and 50% refunded",
+      refund_amount: refundCalculation.refund_amount,
+      refund_percentage: refundCalculation.refund_percentage,
+      reason: refundCalculation.reason,
+      message: `Đã hủy và hoàn ${refundCalculation.refund_percentage}%`,
     })
   } catch (error) {
     console.error("[v0] Error cancelling rental:", error)

@@ -2,11 +2,19 @@ import { NextResponse } from "next/server"
 import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
 import { rentNumberWithFailover } from "@/lib/multi-provider-client"
+import { notifyRentalCreated, notifyBalanceLow } from "@/lib/notification-service"
+import { rentalSchema, validateAndSanitize } from "@/lib/security/api-validation"
 
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { serviceId, countryId } = body
+
+    const validation = validateAndSanitize(rentalSchema, body)
+    if (!validation.success) {
+      return NextResponse.json({ error: validation.error }, { status: 400 })
+    }
+
+    const { serviceId, countryId } = validation.data
 
     const cookieStore = await cookies()
     const supabase = createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
@@ -80,7 +88,6 @@ export async function POST(request: Request) {
       .single()
 
     if (rentalError) {
-      // Rollback: cancel the activation
       console.error("[v0] Failed to save rental to database, rolling back:", rentalError)
       try {
         const { cancelActivation } = await import("@/lib/multi-provider-client")
@@ -91,11 +98,9 @@ export async function POST(request: Request) {
       throw rentalError
     }
 
-    // Update user balance
     const newBalance = Number.parseFloat(profile.balance.toString()) - Number.parseFloat(pricing.price.toString())
     await supabase.from("profiles").update({ balance: newBalance }).eq("id", user.id)
 
-    // Create transaction record
     await supabase.from("transactions").insert({
       user_id: user.id,
       rental_id: rental.id,
@@ -107,7 +112,12 @@ export async function POST(request: Request) {
       description: `Rental for ${service.name} - ${country.name} (${rentalResult.provider})`,
     })
 
-    // Notify provider that number is being used (SMS-Activate only)
+    await notifyRentalCreated(user.id, rentalResult.phoneNumber, service.name, country.name)
+
+    if (newBalance < 10000) {
+      await notifyBalanceLow(user.id, newBalance)
+    }
+
     if (rentalResult.provider === "sms-activate") {
       try {
         const { getSmsActivateClient } = await import("@/lib/sms-activate")
@@ -115,7 +125,6 @@ export async function POST(request: Request) {
         await client.setStatus(rentalResult.activationId, 1)
       } catch (statusError) {
         console.error("[v0] Failed to set SMS-Activate status:", statusError)
-        // Non-critical error, continue
       }
     }
 
