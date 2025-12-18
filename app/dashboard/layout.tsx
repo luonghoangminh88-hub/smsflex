@@ -25,7 +25,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   if (profileError || !profile) {
     console.error("[v0] Dashboard layout: profile not found for user:", user.email, profileError?.message)
-    redirect("/auth/login?reason=no_profile")
+
+    const errorMsg = encodeURIComponent(`Profile không tồn tại. Lỗi: ${profileError?.message || "Unknown"}`)
+    redirect(`/auth/login?error=${errorMsg}`)
   }
 
   console.log("[v0] Dashboard layout: profile loaded successfully")

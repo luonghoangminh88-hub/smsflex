@@ -54,22 +54,7 @@ export default function LoginPage() {
         throw error
       }
 
-      console.log("[v0] Login successful, checking profile...")
-
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select("id, email, role")
-        .eq("id", data.user.id)
-        .single()
-
-      if (profileError || !profile) {
-        console.error("[v0] Profile not found:", profileError)
-        setError("Không tìm thấy thông tin tài khoản. Vui lòng liên hệ hỗ trợ.")
-        await supabase.auth.signOut()
-        return
-      }
-
-      console.log("[v0] Profile verified, redirecting to dashboard")
+      console.log("[v0] Login successful, session established")
 
       await new Promise((resolve) => setTimeout(resolve, 500))
 

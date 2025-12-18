@@ -59,8 +59,14 @@ export default function SignupPage() {
       })
 
       if (error) {
-        console.error("[v0] Signup error:", error)
-        throw error
+        if (error.message.includes("User already registered")) {
+          setError("Email này đã được đăng ký. Vui lòng đăng nhập hoặc sử dụng email khác.")
+        } else {
+          console.error("[v0] Signup error:", error)
+          throw error
+        }
+        setIsLoading(false)
+        return
       }
 
       console.log("[v0] Signup successful:", data.user?.email)
@@ -70,7 +76,7 @@ export default function SignupPage() {
         router.push("/auth/signup-success")
       } else if (data.session) {
         console.log("[v0] Auto-confirmed, redirecting to dashboard")
-        await new Promise((resolve) => setTimeout(resolve, 1000))
+        await new Promise((resolve) => setTimeout(resolve, 1500))
         router.push("/dashboard")
         router.refresh()
       }
