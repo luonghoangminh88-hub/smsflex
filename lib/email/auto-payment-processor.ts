@@ -40,16 +40,43 @@ export class AutoPaymentProcessor {
     try {
       // Initialize IMAP client
       const imapClient = new ImapClient({
-        user: process.env.BANK_EMAIL_USER || "hocluongvan88@gmail.com",
-        password: process.env.BANK_EMAIL_PASSWORD || "acuiscrpwrvjztqr",
-        host: process.env.BANK_EMAIL_HOST || "imap.gmail.com",
-        port: Number.parseInt(process.env.BANK_EMAIL_PORT || "993"),
+        user: process.env.EMAIL_USER || "",
+        password: process.env.EMAIL_PASSWORD || "",
+        host: process.env.EMAIL_HOST || "imap.gmail.com",
+        port: Number.parseInt(process.env.EMAIL_PORT || "993"),
         tls: true,
       })
 
-      // Fetch unseen emails from banks
-      const bankEmails = BankEmailParser.getSupportedBankEmails()
-      console.log("[v0] Supported bank emails:", bankEmails)
+      const { data: activePaymentMethods } = await this.supabase
+        .from("payment_methods")
+        .select("bank_code")
+        .eq("is_active", true)
+        .not("bank_code", "is", null)
+
+      // Map bank codes to email addresses
+      const bankCodeToEmail: Record<string, string> = {
+        VCB: "VCBDigibank@info.vietcombank.com.vn",
+        MB: "mbebanking@mbbank.com.vn",
+        ACB: "acb-notification@acb.com.vn",
+        VCCB: "support@timo.vn", // Timo
+        TPB: "ebanking@tpb.com.vn",
+      }
+
+      const bankEmails: string[] = []
+      if (activePaymentMethods) {
+        for (const pm of activePaymentMethods) {
+          if (pm.bank_code && bankCodeToEmail[pm.bank_code]) {
+            bankEmails.push(bankCodeToEmail[pm.bank_code])
+          }
+        }
+      }
+
+      // Fallback to all supported banks if none configured
+      if (bankEmails.length === 0) {
+        bankEmails.push(...Object.values(bankCodeToEmail))
+      }
+
+      console.log("[v0] Monitoring bank emails:", bankEmails)
 
       const emails = await imapClient.fetchUnseenEmails(bankEmails)
 
@@ -66,7 +93,7 @@ export class AutoPaymentProcessor {
 
         if (!transaction) {
           result.errorCount++
-          const errorMsg = `Failed to parse email from ${email.from} - subject: ${email.subject}`
+          const errorMsg = `Failed to parse email from ${email.from}`
           console.error(`[v0] ${errorMsg}`)
           result.errors.push(errorMsg)
 
@@ -86,9 +113,8 @@ export class AutoPaymentProcessor {
           continue
         }
 
-        console.log("[v0] Successfully parsed transaction:", transaction)
+        console.log("[v0] Parsed transaction:", transaction)
 
-        // Check if transaction already exists
         const { data: existing } = await this.supabase
           .from("bank_transactions")
           .select("id")
@@ -100,7 +126,6 @@ export class AutoPaymentProcessor {
           continue
         }
 
-        // Save to bank_transactions table
         const { data: bankTx, error: insertError } = await this.supabase
           .from("bank_transactions")
           .insert({
@@ -123,21 +148,47 @@ export class AutoPaymentProcessor {
           continue
         }
 
-        // Try to process automatically if user_id found
-        if (transaction.userId) {
-          const processed = await this.processTransaction(bankTx.id, transaction.userId, transaction.amount)
+        const { data: deposit } = await this.supabase
+          .from("deposits")
+          .select("*, profiles!inner(*)")
+          .eq("status", "pending")
+          .eq("payment_code", transaction.content)
+          .single()
 
-          if (processed.success) {
-            result.successCount++
-          } else if (processed.needsReview) {
-            result.manualReviewCount++
+        if (deposit) {
+          // Verify amount matches
+          if (Math.abs(deposit.amount - transaction.amount) < 100) {
+            // Allow 100 VND tolerance
+            const processed = await this.completeDeposit(bankTx.id, deposit.id, deposit.user_id)
+
+            if (processed.success) {
+              result.successCount++
+              console.log(`[v0] Successfully processed deposit ${deposit.id}`)
+            } else {
+              result.errorCount++
+              result.errors.push(processed.error || "Failed to complete deposit")
+            }
           } else {
-            result.errorCount++
-            result.errors.push(processed.error || "Unknown error")
+            // Amount mismatch - manual review
+            await this.supabase
+              .from("bank_transactions")
+              .update({
+                status: "manual_review",
+                error_message: `Amount mismatch: expected ${deposit.amount}, got ${transaction.amount}`,
+              })
+              .eq("id", bankTx.id)
+
+            result.manualReviewCount++
           }
         } else {
-          // No user ID found - needs manual review
-          await this.supabase.from("bank_transactions").update({ status: "manual_review" }).eq("id", bankTx.id)
+          // No matching deposit found - manual review
+          await this.supabase
+            .from("bank_transactions")
+            .update({
+              status: "manual_review",
+              error_message: "No matching deposit found",
+            })
+            .eq("id", bankTx.id)
 
           result.manualReviewCount++
         }
@@ -152,105 +203,69 @@ export class AutoPaymentProcessor {
     }
   }
 
-  private async processTransaction(
+  private async completeDeposit(
     bankTxId: string,
+    depositId: string,
     userId: string,
-    amount: number,
-  ): Promise<{ success: boolean; needsReview: boolean; error?: string }> {
+  ): Promise<{ success: boolean; error?: string }> {
     try {
-      // Find user by ID in content (assuming it's stored somewhere identifiable)
-      // For now, we'll search in profiles
-      const { data: user } = await this.supabase.from("profiles").select("id, balance").eq("id", userId).single()
+      const { data: deposit } = await this.supabase.from("deposits").select("amount").eq("id", depositId).single()
 
-      if (!user) {
-        // User not found - needs manual review
-        await this.supabase
-          .from("bank_transactions")
-          .update({
-            status: "manual_review",
-            error_message: "User not found",
-          })
-          .eq("id", bankTxId)
-
-        return { success: false, needsReview: true }
+      if (!deposit) {
+        return { success: false, error: "Deposit not found" }
       }
 
-      // Create deposit record
-      const { data: deposit, error: depositError } = await this.supabase
-        .from("deposits")
-        .insert({
-          user_id: user.id,
-          amount: amount,
-          total_amount: amount,
-          fee: 0,
-          status: "completed",
-          payment_data: { auto_processed: true },
-        })
-        .select()
-        .single()
-
-      if (depositError) {
-        await this.supabase
-          .from("bank_transactions")
-          .update({
-            status: "error",
-            error_message: depositError.message,
-          })
-          .eq("id", bankTxId)
-
-        return { success: false, needsReview: false, error: depositError.message }
-      }
-
-      // Update user balance using atomic function
       const { error: balanceError } = await this.supabase.rpc("atomic_balance_update", {
-        p_user_id: user.id,
-        p_amount: amount,
+        p_user_id: userId,
+        p_amount: deposit.amount,
         p_transaction_type: "deposit",
-        p_description: "Nạp tiền tự động qua email",
+        p_description: "Nạp tiền tự động qua chuyển khoản",
         p_rental_id: null,
       })
 
       if (balanceError) {
-        // Rollback deposit
-        await this.supabase.from("deposits").update({ status: "failed" }).eq("id", deposit.id)
-
-        await this.supabase
-          .from("bank_transactions")
-          .update({
-            status: "error",
-            error_message: balanceError.message,
-          })
-          .eq("id", bankTxId)
-
-        return { success: false, needsReview: false, error: balanceError.message }
+        console.error("[v0] Balance update error:", balanceError)
+        return { success: false, error: balanceError.message }
       }
 
-      // Update bank transaction as success
+      const { error: depositError } = await this.supabase
+        .from("deposits")
+        .update({
+          status: "completed",
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", depositId)
+
+      if (depositError) {
+        console.error("[v0] Deposit update error:", depositError)
+        // Rollback balance?
+        return { success: false, error: depositError.message }
+      }
+
       await this.supabase
         .from("bank_transactions")
         .update({
           status: "success",
-          user_id: user.id,
-          deposit_id: deposit.id,
+          user_id: userId,
+          deposit_id: depositId,
           processed_at: new Date().toISOString(),
         })
         .eq("id", bankTxId)
 
-      // Send notification to user
       await this.supabase.from("notifications").insert({
-        user_id: user.id,
+        user_id: userId,
         type: "deposit",
         title: "Nạp tiền thành công",
-        message: `Tài khoản của bạn đã được cộng ${amount.toLocaleString("vi-VN")}đ`,
-        metadata: { deposit_id: deposit.id, amount },
+        message: `Tài khoản của bạn đã được cộng ${deposit.amount.toLocaleString("vi-VN")}đ`,
+        metadata: { deposit_id: depositId, amount: deposit.amount },
       })
 
-      return { success: true, needsReview: false }
+      console.log(`[v0] Successfully completed deposit ${depositId} for user ${userId}`)
+      return { success: true }
     } catch (error) {
-      console.error("[v0] Error processing transaction:", error)
+      console.error("[v0] Error completing deposit:", error)
       return {
         success: false,
-        needsReview: false,
         error: error instanceof Error ? error.message : "Unknown error",
       }
     }

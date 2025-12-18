@@ -156,10 +156,11 @@ export class BankEmailParser {
         const contentMatch = emailText.match(config.patterns.content)
         if (!contentMatch) {
           console.log("[v0] Content not found with pattern:", config.patterns.content)
-          return null
+          content = ""
+        } else {
+          content = contentMatch[1]?.trim() || contentMatch[0]?.trim()
+          console.log("[v0] Found content:", content)
         }
-        content = contentMatch[1]?.trim() || contentMatch[0]?.trim()
-        console.log("[v0] Found content:", content)
       }
 
       // Extract sender info (optional)
