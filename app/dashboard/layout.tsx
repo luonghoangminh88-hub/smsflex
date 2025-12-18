@@ -7,20 +7,28 @@ import type { Profile } from "@/lib/types"
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
 
+  console.log("[v0] Dashboard layout: verifying authentication")
+
   const {
     data: { user },
     error,
   } = await supabase.auth.getUser()
 
   if (error || !user) {
-    redirect("/auth/login")
+    console.error("[v0] Dashboard layout: authentication failed", error?.message)
+    redirect("/auth/login?reason=session_error")
   }
 
-  const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).single()
+  console.log("[v0] Dashboard layout: user authenticated:", user.email)
 
-  if (!profile) {
-    redirect("/auth/login")
+  const { data: profile, error: profileError } = await supabase.from("profiles").select("*").eq("id", user.id).single()
+
+  if (profileError || !profile) {
+    console.error("[v0] Dashboard layout: profile not found for user:", user.email, profileError?.message)
+    redirect("/auth/login?reason=no_profile")
   }
+
+  console.log("[v0] Dashboard layout: profile loaded successfully")
 
   return (
     <div className="min-h-svh bg-background">

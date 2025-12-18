@@ -41,12 +41,15 @@ export default function SignupPage() {
       return
     }
 
+    console.log("[v0] Starting signup process for:", email)
+
     try {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || `${window.location.origin}/dashboard`,
+          emailRedirectTo:
+            process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL || `${window.location.origin}/api/auth/callback`,
           data: {
             full_name: fullName,
             phone_number: phoneNumber,
@@ -54,9 +57,25 @@ export default function SignupPage() {
           },
         },
       })
-      if (error) throw error
-      router.push("/auth/signup-success")
+
+      if (error) {
+        console.error("[v0] Signup error:", error)
+        throw error
+      }
+
+      console.log("[v0] Signup successful:", data.user?.email)
+
+      if (data.user && !data.session) {
+        console.log("[v0] Email confirmation required")
+        router.push("/auth/signup-success")
+      } else if (data.session) {
+        console.log("[v0] Auto-confirmed, redirecting to dashboard")
+        await new Promise((resolve) => setTimeout(resolve, 1000))
+        router.push("/dashboard")
+        router.refresh()
+      }
     } catch (error: unknown) {
+      console.error("[v0] Signup exception:", error)
       setError(error instanceof Error ? error.message : "Đã xảy ra lỗi khi đăng ký")
     } finally {
       setIsLoading(false)

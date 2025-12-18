@@ -6,6 +6,8 @@ export async function GET(request: Request) {
   const code = requestUrl.searchParams.get("code")
   const origin = requestUrl.origin
 
+  console.log("[v0] OAuth callback: processing code")
+
   if (code) {
     const supabase = await createClient()
 
@@ -23,6 +25,8 @@ export async function GET(request: Request) {
     } = await supabase.auth.getUser()
 
     if (user) {
+      console.log("[v0] OAuth callback: user authenticated:", user.email)
+
       // Check if profile exists
       const { data: existingProfile } = await supabase
         .from("profiles")
@@ -31,6 +35,7 @@ export async function GET(request: Request) {
         .single()
 
       if (existingProfile) {
+        console.log("[v0] OAuth callback: updating existing profile")
         // Update existing profile with Google ID and avatar
         await supabase
           .from("profiles")
@@ -42,8 +47,9 @@ export async function GET(request: Request) {
           })
           .eq("email", user.email)
       } else {
+        console.log("[v0] OAuth callback: creating new profile")
         // Create new profile for new Google user
-        await supabase.from("profiles").insert({
+        const { error: insertError } = await supabase.from("profiles").insert({
           id: user.id,
           email: user.email!,
           full_name: user.user_metadata?.full_name || user.user_metadata?.name || "",
@@ -52,13 +58,19 @@ export async function GET(request: Request) {
           role: "user",
           balance: 0,
         })
+
+        if (insertError) {
+          console.error("[v0] OAuth callback: failed to create profile", insertError)
+        }
       }
     }
 
+    console.log("[v0] OAuth callback: redirecting to dashboard")
     // Redirect to dashboard after successful authentication
     return NextResponse.redirect(`${origin}/dashboard`)
   }
 
+  console.log("[v0] OAuth callback: no code, redirecting to login")
   // No code present, redirect to login
   return NextResponse.redirect(`${origin}/auth/login`)
 }

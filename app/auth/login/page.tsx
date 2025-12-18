@@ -1,6 +1,7 @@
 "use client"
 
 import type React from "react"
+import { useSearchParams } from "next/navigation"
 
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
@@ -19,6 +20,20 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
+  const searchParams = useSearchParams()
+
+  useState(() => {
+    const errorParam = searchParams.get("error")
+    const reason = searchParams.get("reason")
+
+    if (errorParam) {
+      setError(decodeURIComponent(errorParam))
+    } else if (reason === "no_profile") {
+      setError("Không tìm thấy thông tin tài khoản. Vui lòng liên hệ hỗ trợ.")
+    } else if (reason === "session_error") {
+      setError("Phiên đăng nhập không hợp lệ. Vui lòng thử lại.")
+    }
+  })
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -26,15 +41,42 @@ export default function LoginPage() {
     setIsLoading(true)
     setError(null)
 
+    console.log("[v0] Starting login process for:", email)
+
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
-      if (error) throw error
+
+      if (error) {
+        console.error("[v0] Login error:", error)
+        throw error
+      }
+
+      console.log("[v0] Login successful, checking profile...")
+
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("id, email, role")
+        .eq("id", data.user.id)
+        .single()
+
+      if (profileError || !profile) {
+        console.error("[v0] Profile not found:", profileError)
+        setError("Không tìm thấy thông tin tài khoản. Vui lòng liên hệ hỗ trợ.")
+        await supabase.auth.signOut()
+        return
+      }
+
+      console.log("[v0] Profile verified, redirecting to dashboard")
+
+      await new Promise((resolve) => setTimeout(resolve, 500))
+
       router.push("/dashboard")
       router.refresh()
     } catch (error: unknown) {
+      console.error("[v0] Login exception:", error)
       setError(error instanceof Error ? error.message : "Đã xảy ra lỗi khi đăng nhập")
     } finally {
       setIsLoading(false)
