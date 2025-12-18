@@ -124,7 +124,7 @@ export default function AdminPaymentMethodsPage() {
   }
 
   return (
-    <div className="p-8 space-y-8">
+    <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold">Phương thức thanh toán</h1>
         <p className="text-muted-foreground mt-2">Quản lý cấu hình ngân hàng và cổng thanh toán</p>

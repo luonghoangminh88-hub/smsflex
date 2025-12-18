@@ -4,23 +4,79 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { LayoutDashboard, Users, Phone, Globe, Settings, LogOut, Wallet, CreditCard } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import {
+  LayoutDashboard,
+  Users,
+  Phone,
+  Globe,
+  Settings,
+  LogOut,
+  Wallet,
+  CreditCard,
+  Shield,
+  Bell,
+  User,
+  Mail,
+  Landmark,
+} from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
-
-const navItems = [
-  { href: "/admin", icon: LayoutDashboard, label: "Tổng quan" },
-  { href: "/admin/users", icon: Users, label: "Người dùng" },
-  { href: "/admin/rentals", icon: Phone, label: "Lượt thuê" },
-  { href: "/admin/services", icon: Globe, label: "Dịch vụ & Quốc gia" },
-  { href: "/admin/transactions", icon: Wallet, label: "Giao dịch" },
-  { href: "/admin/payment-methods", icon: CreditCard, label: "Phương thức thanh toán" },
-  { href: "/admin/settings", icon: Settings, label: "Cài đặt" },
-]
+import { useAdminCounts } from "@/hooks/use-admin-counts"
+import { useEffect, useState } from "react"
 
 export function AdminSidebar() {
   const pathname = usePathname()
   const router = useRouter()
+  const { counts, loading } = useAdminCounts()
+  const [dismissedBadges, setDismissedBadges] = useState<Set<string>>(new Set())
+
+  // Load dismissed badges from localStorage on mount
+  useEffect(() => {
+    const stored = localStorage.getItem("admin-dismissed-badges")
+    if (stored) {
+      try {
+        setDismissedBadges(new Set(JSON.parse(stored)))
+      } catch (e) {
+        console.error("[v0] Error loading dismissed badges:", e)
+      }
+    }
+  }, [])
+
+  const navItems = [
+    { href: "/admin", icon: LayoutDashboard, label: "Tổng quan", count: null, key: "dashboard" },
+    { href: "/admin/users", icon: Users, label: "Người dùng", count: counts.users, key: "users" },
+    { href: "/admin/rentals", icon: Phone, label: "Lượt thuê", count: counts.rentals, key: "rentals" },
+    { href: "/admin/services", icon: Globe, label: "Dịch vụ & Quốc gia", count: null, key: "services" },
+    { href: "/admin/transactions", icon: Wallet, label: "Giao dịch", count: counts.transactions, key: "transactions" },
+    { href: "/admin/deposits", icon: CreditCard, label: "Nạp tiền", count: counts.deposits, key: "deposits" },
+    {
+      href: "/admin/payment-methods",
+      icon: CreditCard,
+      label: "Phương thức thanh toán",
+      count: counts.paymentMethods,
+      key: "payment-methods",
+    },
+    {
+      href: "/admin/bank-transactions",
+      icon: Landmark,
+      label: "Giao dịch ngân hàng",
+      count: counts.bankTransactions,
+      key: "bank-transactions",
+    },
+    { href: "/admin/notifications", icon: Bell, label: "Thông báo", count: counts.notifications, key: "notifications" },
+    { href: "/admin/security-monitor", icon: Shield, label: "Bảo mật", count: counts.security, key: "security" },
+    { href: "/admin/profile", icon: User, label: "Hồ sơ", count: null, key: "profile" },
+    { href: "/admin/email-config", icon: Mail, label: "Cấu hình Email", count: null, key: "email-config" },
+    { href: "/admin/settings", icon: Settings, label: "Cài đặt", count: null, key: "settings" },
+  ]
+
+  const handleMenuClick = (key: string) => {
+    const newDismissed = new Set(dismissedBadges)
+    newDismissed.add(key)
+    setDismissedBadges(newDismissed)
+    localStorage.setItem("admin-dismissed-badges", JSON.stringify(Array.from(newDismissed)))
+  }
 
   const handleLogout = async () => {
     const supabase = createClient()
@@ -42,14 +98,24 @@ export function AdminSidebar() {
         {navItems.map((item) => {
           const Icon = item.icon
           const isActive = pathname === item.href
+          const showBadge = !loading && item.count !== null && item.count > 0 && !dismissedBadges.has(item.key)
+
           return (
-            <Link key={item.href} href={item.href}>
+            <Link key={item.href} href={item.href} onClick={() => handleMenuClick(item.key)}>
               <Button
                 variant={isActive ? "secondary" : "ghost"}
-                className={cn("w-full justify-start", isActive && "bg-primary/10 text-primary")}
+                className={cn("w-full justify-start relative", isActive && "bg-primary/10 text-primary")}
               >
-                <Icon className="mr-2 h-4 w-4" />
-                {item.label}
+                {showBadge && (
+                  <Badge
+                    variant="destructive"
+                    className="absolute left-1 top-1/2 -translate-y-1/2 h-5 w-5 p-0 flex items-center justify-center text-[10px] rounded-full"
+                  >
+                    {item.count! > 9 ? "9+" : item.count}
+                  </Badge>
+                )}
+                <Icon className={cn("h-4 w-4", showBadge ? "ml-6 mr-2" : "mr-2")} />
+                <span className="flex-1 text-left">{item.label}</span>
               </Button>
             </Link>
           )
