@@ -1,10 +1,11 @@
+export const dynamic = "force-dynamic"
+export const revalidate = 0
+
 import { requireAdminAuth } from "@/lib/auth/admin-check"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { CheckCircle2, AlertCircle, Info } from "lucide-react"
-
-export const dynamic = "force-dynamic"
 
 export default async function AutoPaymentSetupPage() {
   await requireAdminAuth()

@@ -5,6 +5,7 @@ import { Bell, Check, Eye } from "lucide-react"
 import { AdminNotificationsClient } from "@/components/admin-notifications-client"
 
 export const dynamic = "force-dynamic"
+export const revalidate = 0
 
 export default async function AdminNotificationsPage() {
   await requireAdminAuth()

@@ -1,4 +1,5 @@
 export const dynamic = "force-dynamic"
+export const revalidate = 0
 
 import { requireAdminAuth } from "@/lib/auth/admin-check"
 import { getAuditLogs, getSecurityLogs } from "@/lib/security/audit-logger"
