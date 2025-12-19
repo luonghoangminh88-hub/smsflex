@@ -93,7 +93,7 @@ export default function AdminProfilePage() {
     } catch (error) {
       console.error("Error updating profile:", error)
       toast({
-        title: "Lỗi",
+        title: "L���i",
         description: "Không thể cập nhật thông tin",
         variant: "destructive",
       })
