@@ -44,10 +44,10 @@ export default async function RentalDetailPage({ params }: { params: Promise<{ i
   const timeRemaining = expiresAt ? Math.max(0, Math.floor((expiresAt - now) / 1000)) : 0
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-3xl">
+    <div className="container mx-auto px-4 sm:px-6 py-8 max-w-3xl">
       <AutoRefreshClient rentalId={id} hasOtp={!!rental.otp_code} />
 
-      <Button variant="ghost" asChild className="mb-6">
+      <Button variant="ghost" asChild className="mb-6 min-h-[44px]">
         <Link href="/dashboard">
           <ArrowLeft className="mr-2 h-4 w-4" />
           Quay lại Dashboard
@@ -66,8 +66,8 @@ export default async function RentalDetailPage({ params }: { params: Promise<{ i
             <RentalStatus status={(rental as PhoneRental).status} />
           </div>
         </CardHeader>
-        <CardContent className="space-y-6 p-6">
-          <div className="p-6 bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-950/20 dark:to-blue-950/20 rounded-xl border-2 space-y-3">
+        <CardContent className="space-y-6 p-4 sm:p-6">
+          <div className="p-4 sm:p-6 bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-950/20 dark:to-blue-950/20 rounded-xl border-2 space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-sm font-semibold text-muted-foreground flex items-center gap-2">
                 <Phone className="h-5 w-5" />
@@ -75,7 +75,7 @@ export default async function RentalDetailPage({ params }: { params: Promise<{ i
               </span>
               <CopyButton text={(rental as PhoneRental).phone_number} />
             </div>
-            <div className="text-3xl md:text-4xl font-mono font-bold text-center py-4 tracking-wider">
+            <div className="text-2xl sm:text-3xl md:text-4xl font-mono font-bold text-center py-4 tracking-wider break-all">
               {(rental as PhoneRental).phone_number}
             </div>
             <p className="text-xs text-center text-muted-foreground">
@@ -92,7 +92,7 @@ export default async function RentalDetailPage({ params }: { params: Promise<{ i
           </div>
 
           {(rental as PhoneRental).otp_code ? (
-            <div className="p-6 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 border-2 border-green-300 dark:border-green-800 rounded-xl space-y-4 animate-in fade-in slide-in-from-top-4">
+            <div className="p-4 sm:p-6 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 border-2 border-green-300 dark:border-green-800 rounded-xl space-y-4 animate-in fade-in slide-in-from-top-4">
               <div className="flex items-center justify-between">
                 <span className="text-base text-green-800 dark:text-green-400 flex items-center gap-2 font-bold">
                   <CheckCircle className="h-6 w-6" />
@@ -100,7 +100,7 @@ export default async function RentalDetailPage({ params }: { params: Promise<{ i
                 </span>
                 <CopyButton text={(rental as PhoneRental).otp_code!} />
               </div>
-              <div className="text-4xl md:text-5xl font-mono font-bold text-center py-6 text-green-700 dark:text-green-400 tracking-widest">
+              <div className="text-3xl sm:text-4xl md:text-5xl font-mono font-bold text-center py-6 text-green-700 dark:text-green-400 tracking-[0.3em] break-all">
                 {(rental as PhoneRental).otp_code}
               </div>
               <div className="flex items-center justify-center gap-2 text-sm text-green-700 dark:text-green-400">
@@ -109,7 +109,7 @@ export default async function RentalDetailPage({ params }: { params: Promise<{ i
               </div>
             </div>
           ) : (
-            <div className="p-6 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 border-2 border-amber-200 dark:border-amber-800 rounded-xl text-center space-y-4">
+            <div className="p-4 sm:p-6 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20 border-2 border-amber-200 dark:border-amber-800 rounded-xl text-center space-y-4">
               <div className="flex justify-center">
                 <div className="relative">
                   <Clock className="h-12 w-12 text-amber-600 dark:text-amber-400 animate-pulse" />
@@ -177,7 +177,7 @@ export default async function RentalDetailPage({ params }: { params: Promise<{ i
 
           {(rental as PhoneRental).status === "completed" && (
             <div className="pt-4 border-t">
-              <Button asChild className="w-full" size="lg" variant="default">
+              <Button asChild className="w-full min-h-[48px]" size="lg" variant="default">
                 <Link href="/dashboard/rent">
                   <Sparkles className="mr-2 h-4 w-4" />
                   Thuê số khác

@@ -37,30 +37,30 @@ export default async function DashboardPage() {
     .in("status", ["waiting", "active"])
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-8">
-      {/* Balance Card */}
+    <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6 sm:space-y-8">
       <Card className="border-2 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
             <Wallet className="h-5 w-5" />
             Số dư tài khoản
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="text-4xl font-bold">{((profile as Profile)?.balance || 0).toLocaleString("vi-VN")}đ</div>
-          <div className="flex gap-2">
-            <Button asChild>
+          <div className="text-3xl sm:text-4xl font-bold">
+            {((profile as Profile)?.balance || 0).toLocaleString("vi-VN")}đ
+          </div>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <Button asChild className="min-h-[48px]">
               <Link href="/dashboard/deposit">Nạp tiền</Link>
             </Button>
-            <Button variant="outline" asChild>
+            <Button variant="outline" asChild className="min-h-[48px] bg-transparent">
               <Link href="/dashboard/history">Lịch sử giao dịch</Link>
             </Button>
           </div>
         </CardContent>
       </Card>
 
-      {/* Stats Grid */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Đang thuê</CardTitle>
@@ -83,7 +83,7 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="sm:col-span-2 lg:col-span-1">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Thành công</CardTitle>
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
@@ -97,14 +97,13 @@ export default async function DashboardPage() {
         </Card>
       </div>
 
-      {/* Quick Action */}
       <Card className="border-2">
         <CardHeader>
-          <CardTitle>Thuê số ngay</CardTitle>
+          <CardTitle className="text-lg sm:text-xl">Thuê số ngay</CardTitle>
           <CardDescription>Chọn dịch vụ và quốc gia để bắt đầu thuê số điện thoại ảo</CardDescription>
         </CardHeader>
         <CardContent>
-          <Button asChild size="lg" className="w-full sm:w-auto">
+          <Button asChild size="lg" className="w-full sm:w-auto min-h-[52px]">
             <Link href="/dashboard/rent">Thuê số mới</Link>
           </Button>
         </CardContent>
@@ -114,30 +113,33 @@ export default async function DashboardPage() {
       {recentRentals && recentRentals.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Lịch sử gần đây</CardTitle>
+            <CardTitle className="text-lg sm:text-xl">Lịch sử gần đây</CardTitle>
             <CardDescription>5 lượt thuê số gần nhất</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               {recentRentals.map((rental: PhoneRental) => (
-                <div key={rental.id} className="flex items-center justify-between border-b pb-4 last:border-0">
-                  <div className="space-y-1">
-                    <p className="font-medium">
+                <div
+                  key={rental.id}
+                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b pb-4 last:border-0 gap-3"
+                >
+                  <div className="space-y-1 flex-1">
+                    <p className="font-medium text-sm sm:text-base">
                       {rental.service?.name} - {rental.country?.name}
                     </p>
-                    <p className="text-sm text-muted-foreground">{rental.phone_number}</p>
+                    <p className="text-sm text-muted-foreground font-mono">{rental.phone_number}</p>
                     <p className="text-xs text-muted-foreground">
                       {new Date(rental.created_at).toLocaleString("vi-VN")}
                     </p>
                   </div>
-                  <div className="text-right">
+                  <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-2 sm:gap-1">
                     <StatusBadge status={rental.status} />
-                    <p className="text-sm font-medium mt-1">{rental.price.toLocaleString("vi-VN")}đ</p>
+                    <p className="text-sm font-medium">{rental.price.toLocaleString("vi-VN")}đ</p>
                   </div>
                 </div>
               ))}
             </div>
-            <Button variant="outline" className="w-full mt-4 bg-transparent" asChild>
+            <Button variant="outline" className="w-full mt-4 bg-transparent min-h-[48px]" asChild>
               <Link href="/dashboard/history">Xem tất cả</Link>
             </Button>
           </CardContent>

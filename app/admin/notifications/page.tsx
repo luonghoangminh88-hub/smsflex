@@ -4,6 +4,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Bell, Check, Eye } from "lucide-react"
 import { AdminNotificationsClient } from "@/components/admin-notifications-client"
 
+export const dynamic = "force-dynamic"
+
 export default async function AdminNotificationsPage() {
   await requireAdminAuth()
   const supabase = await createClient()

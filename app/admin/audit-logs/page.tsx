@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic"
+
 import { requireAdminAuth } from "@/lib/auth/admin-check"
 import { getAuditLogs, getSecurityLogs } from "@/lib/security/audit-logger"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"

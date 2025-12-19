@@ -418,11 +418,11 @@ export function FivesimInspiredSelector({
 
                 {/* Country Statistics Table */}
                 <div className="space-y-2">
-                  <div className="flex items-center gap-2 mb-3">
+                  <div className="flex flex-wrap items-center gap-2 mb-3">
                     <Button
                       variant={viewMode === "success" ? "default" : "outline"}
                       size="sm"
-                      className="text-xs h-7"
+                      className="text-xs h-7 flex-shrink-0"
                       onClick={() => setViewMode("success")}
                     >
                       {t("service.successRate")} (%)
@@ -430,14 +430,16 @@ export function FivesimInspiredSelector({
                     <Button
                       variant={viewMode === "price" ? "default" : "outline"}
                       size="sm"
-                      className="text-xs h-7"
+                      className="text-xs h-7 flex-shrink-0"
                       onClick={() => setViewMode("price")}
                     >
                       {t("rental.price")} (VNĐ)
                     </Button>
-                    <Badge variant="secondary" className="ml-auto text-xs">
-                      <AlertCircle className="h-3 w-3 mr-1" />
-                      {viewMode === "success" ? "Sắp xếp theo tỷ lệ thành công" : "Sắp xếp theo giá thấp nhất"}
+                    <Badge variant="secondary" className="text-[10px] sm:text-xs break-words leading-tight py-1">
+                      <AlertCircle className="h-3 w-3 mr-1 flex-shrink-0" />
+                      <span className="break-words">
+                        {viewMode === "success" ? "Sắp xếp theo tỷ lệ thành công" : "Sắp xếp theo giá thấp nhất"}
+                      </span>
                     </Badge>
                   </div>
 

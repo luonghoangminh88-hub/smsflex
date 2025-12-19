@@ -95,9 +95,9 @@ export default function TransactionsPage() {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8">
         <Skeleton className="h-8 w-48 mb-6" />
-        <div className="grid gap-4 md:grid-cols-3 mb-8">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mb-8">
           <Skeleton className="h-24" />
           <Skeleton className="h-24" />
           <Skeleton className="h-24" />
@@ -108,23 +108,22 @@ export default function TransactionsPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <Button variant="ghost" asChild className="mb-6">
+    <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8">
+      <Button variant="ghost" asChild className="mb-6 min-h-[44px]">
         <Link href="/dashboard">
           <ArrowLeft className="mr-2 h-4 w-4" />
           Quay lại
         </Link>
       </Button>
 
-      {/* Statistics */}
-      <div className="grid gap-4 md:grid-cols-3 mb-8">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mb-6 sm:mb-8">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Tổng nạp</CardTitle>
             <TrendingUp className="h-4 w-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{totalDeposits.toLocaleString("vi-VN")}đ</div>
+            <div className="text-xl sm:text-2xl font-bold text-green-600">{totalDeposits.toLocaleString("vi-VN")}đ</div>
           </CardContent>
         </Card>
 
@@ -134,23 +133,23 @@ export default function TransactionsPage() {
             <TrendingDown className="h-4 w-4 text-red-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">{totalSpent.toLocaleString("vi-VN")}đ</div>
+            <div className="text-xl sm:text-2xl font-bold text-red-600">{totalSpent.toLocaleString("vi-VN")}đ</div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="sm:col-span-2 lg:col-span-1">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Hoàn tiền</CardTitle>
             <TrendingUp className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{totalRefunds.toLocaleString("vi-VN")}đ</div>
+            <div className="text-xl sm:text-2xl font-bold text-blue-600">{totalRefunds.toLocaleString("vi-VN")}đ</div>
           </CardContent>
         </Card>
       </div>
 
-      <div className="flex items-center justify-between mb-4">
-        <Button variant="outline" onClick={() => setShowFilters(!showFilters)}>
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 mb-4">
+        <Button variant="outline" onClick={() => setShowFilters(!showFilters)} className="min-h-[48px]">
           <Filter className="h-4 w-4 mr-2" />
           {showFilters ? "Ẩn bộ lọc" : "Hiện bộ lọc"}
         </Button>
@@ -163,34 +162,36 @@ export default function TransactionsPage() {
         </div>
       )}
 
-      {/* Transaction List */}
       <Card className="border-2">
         <CardHeader>
-          <CardTitle className="text-2xl">Lịch sử giao dịch</CardTitle>
+          <CardTitle className="text-xl sm:text-2xl">Lịch sử giao dịch</CardTitle>
           <CardDescription>
             Hiển thị {filteredTransactions.length} / {transactions.length} giao dịch
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-4 sm:p-6">
           {filteredTransactions && filteredTransactions.length > 0 ? (
             <div className="space-y-4">
               {filteredTransactions.map((transaction: Transaction) => (
-                <div key={transaction.id} className="flex items-center justify-between border-b pb-4 last:border-0">
-                  <div className="space-y-1 flex-1">
-                    <div className="flex items-center gap-2">
+                <div
+                  key={transaction.id}
+                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b pb-4 last:border-0 gap-3"
+                >
+                  <div className="space-y-2 flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <TransactionTypeBadge type={transaction.type} />
                       <Badge variant={transaction.status === "completed" ? "default" : "secondary"} className="text-xs">
                         {getStatusText(transaction.status)}
                       </Badge>
                     </div>
-                    <p className="text-sm">{transaction.description || "Không có mô tả"}</p>
+                    <p className="text-sm leading-relaxed">{transaction.description || "Không có mô tả"}</p>
                     <p className="text-xs text-muted-foreground">
                       {new Date(transaction.created_at).toLocaleString("vi-VN")}
                     </p>
                   </div>
-                  <div className="text-right">
+                  <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-2">
                     <p
-                      className={`font-semibold text-lg ${transaction.amount > 0 ? "text-green-600" : "text-red-600"}`}
+                      className={`font-semibold text-lg sm:text-xl ${transaction.amount > 0 ? "text-green-600" : "text-red-600"}`}
                     >
                       {transaction.amount > 0 ? "+" : ""}
                       {transaction.amount.toLocaleString("vi-VN")}đ
@@ -208,7 +209,7 @@ export default function TransactionsPage() {
                 {transactions.length === 0 ? "Bạn chưa có giao dịch nào" : "Không tìm thấy giao dịch phù hợp"}
               </p>
               {transactions.length === 0 && (
-                <Button asChild>
+                <Button asChild className="min-h-[48px]">
                   <Link href="/dashboard/deposit">Nạp tiền ngay</Link>
                 </Button>
               )}

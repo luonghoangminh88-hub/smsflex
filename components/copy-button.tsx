@@ -18,9 +18,9 @@ export function CopyButton({ text }: CopyButtonProps) {
   }
 
   return (
-    <Button onClick={handleCopy} variant="ghost" size="sm" className="h-8">
-      {copied ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
-      <span className="ml-2 text-xs">{copied ? "Đã sao chép" : "Sao chép"}</span>
+    <Button onClick={handleCopy} variant="ghost" size="sm" className="min-h-[44px] min-w-[44px] px-3">
+      {copied ? <Check className="h-5 w-5 text-green-600" /> : <Copy className="h-5 w-5" />}
+      <span className="ml-2 text-xs sm:text-sm">{copied ? "Đã sao chép" : "Sao chép"}</span>
     </Button>
   )
 }

@@ -148,8 +148,8 @@ export default function DepositPage() {
     const isCompleted = depositInfo.status === "completed"
 
     return (
-      <div className="container mx-auto px-4 py-8 max-w-3xl">
-        <Button variant="ghost" asChild className="mb-6">
+      <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-3xl">
+        <Button variant="ghost" asChild className="mb-6 min-h-[44px]">
           <Link href="/dashboard">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Quay lại
@@ -163,7 +163,7 @@ export default function DepositPage() {
               {isCompleted ? "Số dư của bạn đã được cập nhật" : "Vui lòng chuyển khoản theo thông tin bên dưới"}
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-6 p-4 sm:p-6">
             {isCompleted ? (
               <div className="flex flex-col items-center justify-center py-8 space-y-4">
                 <CheckCircle2 className="h-16 w-16 text-green-500" />
@@ -171,16 +171,16 @@ export default function DepositPage() {
                   <p className="text-lg font-semibold">Nạp tiền thành công!</p>
                   <p className="text-muted-foreground">Bạn đã nạp {formatVND(depositInfo.amount)} vào tài khoản</p>
                 </div>
-                <Button onClick={() => router.push("/dashboard")} className="mt-4">
+                <Button onClick={() => router.push("/dashboard")} className="mt-4 min-h-[48px]">
                   Quay về trang chủ
                 </Button>
               </div>
             ) : (
               <>
                 {isPolling && (
-                  <Alert className="bg-blue-50 border-blue-200">
-                    <Clock className="h-4 w-4 text-blue-600" />
-                    <AlertDescription className="text-blue-900">
+                  <Alert className="bg-blue-50 border-blue-200 dark:bg-blue-950/20 dark:border-blue-800">
+                    <Clock className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                    <AlertDescription className="text-blue-900 dark:text-blue-100">
                       <div className="flex items-center gap-2">
                         <Loader2 className="h-4 w-4 animate-spin" />
                         <span>Đang chờ xác nhận thanh toán... ({pollCount * 5}s)</span>
@@ -191,11 +191,11 @@ export default function DepositPage() {
                 )}
 
                 {depositInfo.payment_data?.qr_url && (
-                  <div className="flex justify-center p-4 bg-white rounded-lg">
+                  <div className="flex justify-center p-4 bg-white dark:bg-slate-900 rounded-lg">
                     <img
                       src={depositInfo.payment_data.qr_url || "/placeholder.svg"}
                       alt="QR Code thanh toán"
-                      className="w-64 h-64 object-contain"
+                      className="w-48 h-48 sm:w-64 sm:h-64 object-contain"
                     />
                   </div>
                 )}
@@ -204,7 +204,7 @@ export default function DepositPage() {
                   {depositInfo.payment_data?.bank_code && (
                     <div className="space-y-2">
                       <Label>Ngân hàng</Label>
-                      <div className="flex items-center justify-between p-3 bg-secondary rounded-lg">
+                      <div className="flex items-center justify-between p-4 bg-secondary rounded-lg min-h-[52px]">
                         <span className="font-semibold">{depositInfo.payment_data.bank_code}</span>
                       </div>
                     </div>
@@ -213,14 +213,21 @@ export default function DepositPage() {
                   {depositInfo.payment_data?.account_number && (
                     <div className="space-y-2">
                       <Label>Số tài khoản</Label>
-                      <div className="flex items-center justify-between p-3 bg-secondary rounded-lg">
-                        <span className="font-mono">{depositInfo.payment_data.account_number}</span>
+                      <div className="flex items-center justify-between p-4 bg-secondary rounded-lg min-h-[52px]">
+                        <span className="font-mono text-base sm:text-lg break-all">
+                          {depositInfo.payment_data.account_number}
+                        </span>
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => copyToClipboard(depositInfo.payment_data.account_number, "account")}
+                          className="ml-2 min-h-[44px] min-w-[44px]"
                         >
-                          {copied === "account" ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                          {copied === "account" ? (
+                            <Check className="h-5 w-5 text-green-600" />
+                          ) : (
+                            <Copy className="h-5 w-5" />
+                          )}
                         </Button>
                       </div>
                     </div>
@@ -229,39 +236,47 @@ export default function DepositPage() {
                   {depositInfo.payment_data?.account_name && (
                     <div className="space-y-2">
                       <Label>Chủ tài khoản</Label>
-                      <div className="flex items-center justify-between p-3 bg-secondary rounded-lg">
-                        <span>{depositInfo.payment_data.account_name}</span>
+                      <div className="flex items-center justify-between p-4 bg-secondary rounded-lg min-h-[52px]">
+                        <span className="break-words">{depositInfo.payment_data.account_name}</span>
                       </div>
                     </div>
                   )}
 
                   <div className="space-y-2">
                     <Label>Số tiền</Label>
-                    <div className="flex items-center justify-between p-3 bg-secondary rounded-lg">
-                      <span className="font-semibold text-lg">{formatVND(depositInfo.amount)}</span>
+                    <div className="flex items-center justify-between p-4 bg-secondary rounded-lg min-h-[52px]">
+                      <span className="font-semibold text-lg sm:text-xl">{formatVND(depositInfo.amount)}</span>
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => copyToClipboard(depositInfo.amount.toString(), "amount")}
+                        className="ml-2 min-h-[44px] min-w-[44px]"
                       >
-                        {copied === "amount" ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                        {copied === "amount" ? (
+                          <Check className="h-5 w-5 text-green-600" />
+                        ) : (
+                          <Copy className="h-5 w-5" />
+                        )}
                       </Button>
                     </div>
                   </div>
 
                   <div className="space-y-2">
                     <Label>Nội dung chuyển khoản</Label>
-                    <div className="flex items-center justify-between p-3 bg-primary/10 border-2 border-primary rounded-lg">
-                      <span className="font-mono font-semibold">{depositInfo.payment_code}</span>
+                    <div className="flex items-center justify-between p-4 bg-primary/10 border-2 border-primary rounded-lg min-h-[56px]">
+                      <span className="font-mono font-bold text-lg sm:text-xl break-all">
+                        {depositInfo.payment_code}
+                      </span>
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => copyToClipboard(depositInfo.payment_code, "content")}
+                        className="ml-2 min-h-[48px] min-w-[48px]"
                       >
                         {copied === "content" ? (
-                          <Check className="h-4 w-4 text-primary" />
+                          <Check className="h-6 w-6 text-primary" />
                         ) : (
-                          <Copy className="h-4 w-4" />
+                          <Copy className="h-6 w-6" />
                         )}
                       </Button>
                     </div>
@@ -269,9 +284,9 @@ export default function DepositPage() {
                 </div>
 
                 <Alert>
-                  <AlertDescription>
+                  <AlertDescription className="text-sm leading-relaxed">
                     <strong>Lưu ý quan trọng:</strong>
-                    <ul className="list-disc list-inside mt-2 space-y-1 text-sm">
+                    <ul className="list-disc list-inside mt-2 space-y-1">
                       <li>Vui lòng nhập chính xác nội dung chuyển khoản để hệ thống tự động cộng tiền</li>
                       <li>Số dư sẽ được cập nhật trong vòng 1-5 phút sau khi chuyển khoản thành công</li>
                       <li>Nếu sau 30 phút chưa nhận được tiền, vui lòng liên hệ hỗ trợ</li>
@@ -279,11 +294,15 @@ export default function DepositPage() {
                   </AlertDescription>
                 </Alert>
 
-                <div className="flex gap-3">
-                  <Button onClick={() => router.push("/dashboard/transactions")} variant="outline" className="flex-1">
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Button
+                    onClick={() => router.push("/dashboard/transactions")}
+                    variant="outline"
+                    className="flex-1 min-h-[48px]"
+                  >
                     Xem lịch sử giao dịch
                   </Button>
-                  <Button onClick={() => setDepositInfo(null)} className="flex-1">
+                  <Button onClick={() => setDepositInfo(null)} className="flex-1 min-h-[48px]">
                     Tạo yêu cầu mới
                   </Button>
                 </div>
@@ -296,8 +315,8 @@ export default function DepositPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-2xl">
-      <Button variant="ghost" asChild className="mb-6">
+    <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8 max-w-2xl">
+      <Button variant="ghost" asChild className="mb-6 min-h-[44px]">
         <Link href="/dashboard">
           <ArrowLeft className="mr-2 h-4 w-4" />
           Quay lại
@@ -312,7 +331,7 @@ export default function DepositPage() {
           </CardTitle>
           <CardDescription>Chọn phương thức thanh toán và số tiền muốn nạp</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-6 p-4 sm:p-6">
           <div className="space-y-3">
             <Label>Phương thức thanh toán</Label>
             <div className="grid gap-3">
@@ -320,7 +339,7 @@ export default function DepositPage() {
                 <button
                   key={method.id}
                   onClick={() => setSelectedMethod(method.id)}
-                  className={`flex items-center gap-3 p-4 rounded-lg border-2 transition-all ${
+                  className={`flex items-center gap-3 p-4 rounded-lg border-2 transition-all min-h-[64px] ${
                     selectedMethod === method.id
                       ? "border-primary bg-primary/5"
                       : "border-border hover:border-primary/50"
@@ -348,13 +367,13 @@ export default function DepositPage() {
 
           <div className="space-y-3">
             <Label>Chọn nhanh</Label>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
               {PRESET_AMOUNTS.map((preset) => (
                 <Button
                   key={preset}
                   variant={amount === preset.toString() ? "default" : "outline"}
                   onClick={() => setAmount(preset.toString())}
-                  className="h-auto py-3"
+                  className="h-auto py-4 min-h-[52px] text-sm sm:text-base"
                 >
                   {formatVND(preset)}
                 </Button>
@@ -367,10 +386,12 @@ export default function DepositPage() {
             <Input
               id="amount"
               type="number"
+              inputMode="numeric"
               placeholder="Ví dụ: 150000"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               disabled={isLoading}
+              className="text-lg h-12"
             />
             <p className="text-xs text-muted-foreground">
               Số tiền nạp tối thiểu: {formatVND(selectedMethodData?.min_amount || 10000)}
@@ -395,7 +416,7 @@ export default function DepositPage() {
           <Button
             onClick={handleCreateDeposit}
             disabled={isLoading || !amount || !selectedMethod}
-            className="w-full"
+            className="w-full min-h-[52px] text-base"
             size="lg"
           >
             {isLoading ? "Đang xử lý..." : "Tiếp tục"}

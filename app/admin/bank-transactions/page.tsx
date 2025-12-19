@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic"
+
 import { requireAdminAuth } from "@/lib/auth/admin-check"
 import { createClient } from "@/lib/supabase/server"
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
