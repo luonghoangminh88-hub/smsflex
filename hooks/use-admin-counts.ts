@@ -11,6 +11,7 @@ interface AdminCounts {
   notifications: number
   security: number
   deposits: number
+  bankTransactions: number
 }
 
 export function useAdminCounts() {
@@ -22,6 +23,7 @@ export function useAdminCounts() {
     notifications: 0,
     security: 0,
     deposits: 0,
+    bankTransactions: 0,
   })
   const [loading, setLoading] = useState(true)
 
@@ -39,6 +41,7 @@ export function useAdminCounts() {
           notificationsResult,
           securityResult,
           depositsResult,
+          bankTransactionsResult,
         ] = await Promise.all([
           // Total active users
           supabase
@@ -75,6 +78,11 @@ export function useAdminCounts() {
             .from("deposits")
             .select("id", { count: "exact", head: true })
             .eq("status", "pending"),
+          // Unprocessed bank transactions
+          supabase
+            .from("bank_transactions")
+            .select("id", { count: "exact", head: true })
+            .eq("processed", false),
         ])
 
         setCounts({
@@ -85,6 +93,7 @@ export function useAdminCounts() {
           notifications: notificationsResult.count || 0,
           security: securityResult.count || 0,
           deposits: depositsResult.count || 0,
+          bankTransactions: bankTransactionsResult.count || 0,
         })
       } catch (error) {
         console.error("[v0] Error fetching admin counts:", error)

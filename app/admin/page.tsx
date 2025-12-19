@@ -1,24 +1,24 @@
-import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/server"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Users, Phone, Wallet, DollarSign, Activity } from "lucide-react"
 
 export default async function AdminDashboardPage() {
-  const supabase = await createClient()
+  const supabaseAdmin = await createAdminClient()
 
-  // Get statistics
-  const { count: totalUsers } = await supabase
+  // Get statistics with admin client
+  const { count: totalUsers } = await supabaseAdmin
     .from("profiles")
     .select("*", { count: "exact", head: true })
     .eq("role", "user")
 
-  const { count: totalRentals } = await supabase.from("phone_rentals").select("*", { count: "exact", head: true })
+  const { count: totalRentals } = await supabaseAdmin.from("phone_rentals").select("*", { count: "exact", head: true })
 
-  const { count: activeRentals } = await supabase
+  const { count: activeRentals } = await supabaseAdmin
     .from("phone_rentals")
     .select("*", { count: "exact", head: true })
     .in("status", ["waiting", "active"])
 
-  const { data: transactions } = await supabase
+  const { data: transactions } = await supabaseAdmin
     .from("transactions")
     .select("amount")
     .eq("type", "rental_purchase")
@@ -26,7 +26,7 @@ export default async function AdminDashboardPage() {
 
   const totalRevenue = transactions?.reduce((sum, t) => sum + Math.abs(t.amount), 0) || 0
 
-  const { data: completedRentals } = await supabase
+  const { data: completedRentals } = await supabaseAdmin
     .from("phone_rentals")
     .select(
       `
@@ -47,7 +47,7 @@ export default async function AdminDashboardPage() {
     }, 0)
   }
 
-  const { data: profitMarginSetting } = await supabase
+  const { data: profitMarginSetting } = await supabaseAdmin
     .from("system_settings")
     .select("value")
     .eq("key", "profit_margin_percentage")
@@ -56,7 +56,7 @@ export default async function AdminDashboardPage() {
   const currentProfitMargin = profitMarginSetting ? Number(profitMarginSetting.value) : 20
 
   // Recent rentals
-  const { data: recentRentals } = await supabase
+  const { data: recentRentals } = await supabaseAdmin
     .from("phone_rentals")
     .select(
       `
@@ -68,6 +68,14 @@ export default async function AdminDashboardPage() {
     )
     .order("created_at", { ascending: false })
     .limit(10)
+
+  console.log("[v0] Admin dashboard stats:", {
+    totalUsers,
+    totalRentals,
+    activeRentals,
+    totalRevenue,
+    totalProfit,
+  })
 
   return (
     <div className="p-8 space-y-8">

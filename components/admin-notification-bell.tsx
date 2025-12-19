@@ -22,6 +22,7 @@ export function AdminNotificationBell() {
   const [mounted, setMounted] = useState(false)
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
+  const [isLoading, setIsLoading] = useState(true)
   const supabase = createClient()
 
   useEffect(() => {
@@ -34,15 +35,18 @@ export function AdminNotificationBell() {
       .on(
         "postgres_changes",
         {
-          event: "INSERT",
+          event: "*", // Listen to all events
           schema: "public",
           table: "notifications",
         },
-        () => {
+        (payload) => {
+          console.log("[v0] Admin notification change:", payload)
           loadNotifications()
         },
       )
-      .subscribe()
+      .subscribe((status) => {
+        console.log("[v0] Admin notification subscription status:", status)
+      })
 
     return () => {
       supabase.removeChannel(channel)
@@ -50,22 +54,36 @@ export function AdminNotificationBell() {
   }, [])
 
   const loadNotifications = async () => {
-    // Admin sees all notifications from all users
-    const { data } = await supabase
-      .from("notifications")
-      .select(`
-        *,
-        profiles:user_id (
-          full_name,
-          email
-        )
-      `)
-      .order("created_at", { ascending: false })
-      .limit(10)
+    try {
+      console.log("[v0] Loading admin notifications...")
+      // Admin sees all notifications from all users
+      const { data, error } = await supabase
+        .from("notifications")
+        .select(`
+          *,
+          profiles:user_id (
+            full_name,
+            email
+          )
+        `)
+        .order("created_at", { ascending: false })
+        .limit(15)
 
-    if (data) {
-      setNotifications(data)
-      setUnreadCount(data.filter((n) => !n.is_read).length)
+      if (error) {
+        console.error("[v0] Error loading admin notifications:", error)
+        setIsLoading(false)
+        return
+      }
+
+      console.log("[v0] Loaded admin notifications:", data?.length || 0)
+      if (data) {
+        setNotifications(data)
+        setUnreadCount(data.filter((n) => !n.is_read).length)
+      }
+    } catch (error) {
+      console.error("[v0] Exception loading admin notifications:", error)
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -101,7 +119,9 @@ export function AdminNotificationBell() {
             </Badge>
           )}
         </div>
-        {notifications.length === 0 ? (
+        {isLoading ? (
+          <div className="p-6 text-center text-sm text-muted-foreground">Đang tải...</div>
+        ) : notifications.length === 0 ? (
           <div className="p-6 text-center text-sm text-muted-foreground">Không có thông báo mới</div>
         ) : (
           <>

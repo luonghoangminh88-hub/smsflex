@@ -2,10 +2,14 @@ import { requireAdminAuth } from "@/lib/auth/admin-check"
 import { createClient } from "@/lib/supabase/server"
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { BankTransactionsClient } from "@/components/bank-transactions-client"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { AlertCircle } from "lucide-react"
 
 export default async function BankTransactionsPage() {
   await requireAdminAuth()
   const supabase = await createClient()
+
+  console.log("[v0] Checking bank_transactions table...")
 
   // Fetch bank transactions
   const { data: transactions, error } = await supabase
@@ -26,7 +30,27 @@ export default async function BankTransactionsPage() {
     .limit(100)
 
   if (error) {
-    console.error("Error fetching bank transactions:", error)
+    console.error("[v0] Error fetching bank transactions:", error)
+
+    // Check if it's a "table not found" error
+    if (error.message?.includes("relation") && error.message?.includes("does not exist")) {
+      return (
+        <div className="space-y-6">
+          <div>
+            <h1 className="text-3xl font-bold">Giao dịch ngân hàng</h1>
+            <p className="text-muted-foreground">Quản lý giao dịch tự động từ email ngân hàng</p>
+          </div>
+
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Bảng <code>bank_transactions</code> chưa được tạo. Vui lòng chạy migration script{" "}
+              <code>206-create-bank-transactions.sql</code> từ thư mục scripts.
+            </AlertDescription>
+          </Alert>
+        </div>
+      )
+    }
   }
 
   // Get statistics

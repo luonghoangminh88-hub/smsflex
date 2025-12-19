@@ -20,6 +20,7 @@ interface Notification {
 export function NotificationBell() {
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
+  const [isLoading, setIsLoading] = useState(true)
   const supabase = createClient()
 
   useEffect(() => {
@@ -31,15 +32,18 @@ export function NotificationBell() {
       .on(
         "postgres_changes",
         {
-          event: "INSERT",
+          event: "*", // Listen to all events (INSERT, UPDATE, DELETE)
           schema: "public",
           table: "notifications",
         },
-        () => {
+        (payload) => {
+          console.log("[v0] Notification change detected:", payload)
           loadNotifications()
         },
       )
-      .subscribe()
+      .subscribe((status) => {
+        console.log("[v0] Notification subscription status:", status)
+      })
 
     return () => {
       supabase.removeChannel(channel)
@@ -47,27 +51,65 @@ export function NotificationBell() {
   }, [])
 
   const loadNotifications = async () => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-    if (!user) return
+    try {
+      console.log("[v0] Loading notifications...")
+      const {
+        data: { user },
+        error: authError,
+      } = await supabase.auth.getUser()
 
-    const { data } = await supabase
-      .from("notifications")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(5)
+      if (authError) {
+        console.error("[v0] Auth error:", authError)
+        setIsLoading(false)
+        return
+      }
 
-    if (data) {
-      setNotifications(data)
-      setUnreadCount(data.filter((n) => !n.is_read).length)
+      if (!user) {
+        console.log("[v0] No user found")
+        setIsLoading(false)
+        return
+      }
+
+      console.log("[v0] User ID:", user.id)
+
+      const { data, error } = await supabase
+        .from("notifications")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(10) // Limit to 10 most recent notifications
+
+      if (error) {
+        console.error("[v0] Error loading notifications:", error)
+        setIsLoading(false)
+        return
+      }
+
+      console.log("[v0] Loaded notifications:", data?.length || 0)
+      if (data) {
+        setNotifications(data)
+        setUnreadCount(data.filter((n) => !n.is_read).length)
+      }
+    } catch (error) {
+      console.error("[v0] Exception loading notifications:", error)
+    } finally {
+      setIsLoading(false)
     }
   }
 
   const markAsRead = async (id: string) => {
-    await supabase.from("notifications").update({ is_read: true }).eq("id", id)
-    loadNotifications()
+    try {
+      const { error } = await supabase.from("notifications").update({ is_read: true }).eq("id", id)
+
+      if (error) {
+        console.error("[v0] Error marking as read:", error)
+        return
+      }
+
+      loadNotifications()
+    } catch (error) {
+      console.error("[v0] Exception marking as read:", error)
+    }
   }
 
   return (
@@ -80,33 +122,37 @@ export function NotificationBell() {
               variant="destructive"
               className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
             >
-              {unreadCount}
+              {unreadCount > 9 ? "9+" : unreadCount}
             </Badge>
           )}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-80">
         <div className="p-2 font-semibold border-b">Thông báo</div>
-        {notifications.length === 0 ? (
+        {isLoading ? (
+          <div className="p-4 text-center text-sm text-muted-foreground">Đang tải...</div>
+        ) : notifications.length === 0 ? (
           <div className="p-4 text-center text-sm text-muted-foreground">Không có thông báo mới</div>
         ) : (
           <>
-            {notifications.map((notif) => (
-              <DropdownMenuItem
-                key={notif.id}
-                className="flex flex-col items-start gap-1 p-3 cursor-pointer"
-                onClick={() => markAsRead(notif.id)}
-              >
-                <div className="flex items-center gap-2 w-full">
-                  <span className="font-medium text-sm">{notif.title}</span>
-                  {!notif.is_read && <span className="h-2 w-2 rounded-full bg-blue-600" />}
-                </div>
-                <span className="text-xs text-muted-foreground line-clamp-2">{notif.message}</span>
-                <span className="text-xs text-muted-foreground">
-                  {new Date(notif.created_at).toLocaleString("vi-VN")}
-                </span>
-              </DropdownMenuItem>
-            ))}
+            <div className="max-h-[400px] overflow-y-auto">
+              {notifications.map((notif) => (
+                <DropdownMenuItem
+                  key={notif.id}
+                  className="flex flex-col items-start gap-1 p-3 cursor-pointer"
+                  onClick={() => markAsRead(notif.id)}
+                >
+                  <div className="flex items-center gap-2 w-full">
+                    <span className="font-medium text-sm">{notif.title}</span>
+                    {!notif.is_read && <span className="h-2 w-2 rounded-full bg-blue-600" />}
+                  </div>
+                  <span className="text-xs text-muted-foreground line-clamp-2">{notif.message}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {new Date(notif.created_at).toLocaleString("vi-VN")}
+                  </span>
+                </DropdownMenuItem>
+              ))}
+            </div>
             <DropdownMenuItem asChild>
               <Link href="/dashboard/notifications" className="text-center w-full text-sm text-primary">
                 Xem tất cả

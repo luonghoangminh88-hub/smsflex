@@ -523,7 +523,7 @@ export default function HomePage() {
                 Nếu không nhận được OTP thì sao?
               </AccordionTrigger>
               <AccordionContent className="text-muted-foreground leading-relaxed">
-                Nếu không nhận được OTP trong vòng 20 phút, hệ thống tự động hoàn tiền 100% về tài khoản của bạn. Bạn
+                Nếu không nhận được OTP trong vòng 20 ph��t, hệ thống tự động hoàn tiền 100% về tài khoản của bạn. Bạn
                 không cần liên hệ support hay làm bất kỳ thao tác nào. Tỷ lệ thành công của chúng tôi là 99.8%, rất hiếm
                 khi xảy ra trường hợp không nhận được OTP.
               </AccordionContent>

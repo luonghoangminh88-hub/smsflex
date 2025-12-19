@@ -78,13 +78,13 @@ const BANK_CONFIGS: BankParserConfig[] = [
     fromEmail: "support@timo.vn",
     patterns: {
       // Timo format: "Mã lệnh: BVCVCB-12207614650" with hyphens and mixed case
-      transactionId: /(?:M[aã]\s*l[eệ]nh|M[aã]\s*GD|Transaction\s*ID|Ref(?:erence)?)[:\s]*([\w-]+)/i,
+      transactionId: /(?:[A-Z0-9]{16}|[\dA-Z]{12,20})/i,
 
-      amount: /(?:v[aà]o|nh[aậ]n|chuy[eể]n|Số\s*tiền)?\s*[+]?\s*([\d,.]+)\s*(?:VND|đ|d)/i,
+      amount: /(?:v[uừ]a\s*)?(?:t[aă]ng|nh[aậ]n|chuy[eể]n)?\s*([0-9,.]+)\s*VND/i,
 
-      content: /NAPTENF\d+|(?:Description|Content|Message|N[oô]i\s*dung)[:\s]*(.+?)(?:\n|$|<br|;)/i,
+      content: /(?:M[ôo]\s*t[aả]|N[oô]i\s*dung)[:\s]*(.+?)(?=(?:C[aả]m\s*[oơ]n|Tr[aâ]n\s*tr[oọ]ng|$))/is,
 
-      sender: /(?:From|T[uừ]|Ng[ưu][oờ]i\s*g[ửu]i|Số\s*dư\s*hiện\s*tại)[:\s]*(.+?)(?:\n|$|<br|;)/i,
+      sender: /(?:T[uừ]|From|Ng[ưu][oờ]i\s*g[ửu]i)[:\s]*(.+?)(?:\n|$|<br)/i,
     },
   },
   {
@@ -114,11 +114,23 @@ export class BankEmailParser {
     return BANK_CONFIGS.map((config) => config.fromEmail)
   }
 
+  private static extractEmailAddress(from: string): string {
+    const emailMatch = from.match(/<([^>]+)>/)
+    return emailMatch ? emailMatch[1].toLowerCase() : from.toLowerCase()
+  }
+
   static parse(emailFrom: string, emailText: string): BankTransaction | null {
-    const config = BANK_CONFIGS.find((c) => emailFrom.toLowerCase().includes(c.fromEmail.toLowerCase()))
+    const actualEmail = this.extractEmailAddress(emailFrom)
+    console.log("[v0] Extracted email address:", actualEmail)
+
+    const config = BANK_CONFIGS.find((c) => actualEmail.includes(c.fromEmail.toLowerCase()))
 
     if (!config) {
-      console.log("[v0] No parser config found for:", emailFrom)
+      console.log("[v0] No parser config found for:", actualEmail)
+      console.log(
+        "[v0] Supported emails:",
+        BANK_CONFIGS.map((c) => c.fromEmail),
+      )
       return null
     }
 
@@ -126,17 +138,7 @@ export class BankEmailParser {
       console.log(`[v0] Parsing email from ${config.name}`)
       console.log("[v0] Email text preview:", emailText.substring(0, 800))
 
-      // Extract transaction ID
-      const transactionIdMatch = emailText.match(config.patterns.transactionId)
-      if (!transactionIdMatch) {
-        console.log("[v0] Transaction ID not found with pattern:", config.patterns.transactionId)
-        console.log("[v0] Full email text:", emailText)
-        return null
-      }
-      const transactionId = transactionIdMatch[1].trim()
-      console.log("[v0] Found transaction ID:", transactionId)
-
-      // Extract amount
+      // Extract amount first (required)
       const amountMatch = emailText.match(config.patterns.amount)
       if (!amountMatch) {
         console.log("[v0] Amount not found with pattern:", config.patterns.amount)
@@ -154,13 +156,21 @@ export class BankEmailParser {
         console.log("[v0] Found NAPTENF code:", content)
       } else {
         const contentMatch = emailText.match(config.patterns.content)
-        if (!contentMatch) {
-          console.log("[v0] Content not found with pattern:", config.patterns.content)
-          content = ""
-        } else {
+        if (contentMatch) {
           content = contentMatch[1]?.trim() || contentMatch[0]?.trim()
           console.log("[v0] Found content:", content)
         }
+      }
+
+      // Extract transaction ID from content or email body
+      let transactionId = ""
+      const transactionIdMatch = emailText.match(config.patterns.transactionId)
+      if (transactionIdMatch) {
+        transactionId = transactionIdMatch[0].trim()
+        console.log("[v0] Found transaction ID:", transactionId)
+      } else {
+        console.log("[v0] Transaction ID not found, generating fallback ID")
+        transactionId = `TIMO-${Date.now()}-${amount}`
       }
 
       // Extract sender info (optional)

@@ -18,11 +18,11 @@ export const securityHeaders = {
   // Content Security Policy
   "Content-Security-Policy": [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://vercel.live",
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://vercel.live https://va.vercel-scripts.com",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com",
     "img-src 'self' data: https: blob:",
-    "connect-src 'self' https://*.supabase.co https://vercel.live wss://*.supabase.co",
+    "connect-src 'self' https://*.supabase.co https://vercel.live https://vitals.vercel-insights.com wss://*.supabase.co",
     "frame-src 'self' https://accounts.google.com https://vercel.live",
     "object-src 'none'",
     "base-uri 'self'",

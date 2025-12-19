@@ -39,10 +39,19 @@ export function NotificationCenter() {
 
   const fetchNotifications = async () => {
     try {
+      console.log("[v0] Fetching notifications...")
       const res = await fetch("/api/notifications")
-      if (!res.ok) throw new Error("Failed to fetch")
+
+      if (!res.ok) {
+        console.error("[v0] Fetch failed with status:", res.status)
+        throw new Error("Failed to fetch")
+      }
+
       const data = await res.json()
-      setNotifications(data.notifications || [])
+      console.log("[v0] Fetched notifications:", data.notifications?.length || 0)
+
+      const limitedNotifications = (data.notifications || []).slice(0, 15)
+      setNotifications(limitedNotifications)
     } catch (error) {
       console.error("[v0] Error fetching notifications:", error)
     } finally {
@@ -52,11 +61,17 @@ export function NotificationCenter() {
 
   const markAsRead = async (notificationId: string) => {
     try {
-      await fetch("/api/notifications", {
+      const res = await fetch("/api/notifications", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ notificationId, isRead: true }),
       })
+
+      if (!res.ok) {
+        console.error("[v0] Mark as read failed with status:", res.status)
+        return
+      }
+
       setNotifications((prev) => prev.map((n) => (n.id === notificationId ? { ...n, is_read: true } : n)))
     } catch (error) {
       console.error("[v0] Error marking notification as read:", error)
@@ -65,7 +80,13 @@ export function NotificationCenter() {
 
   const markAllAsRead = async () => {
     try {
-      await fetch("/api/notifications/mark-all-read", { method: "POST" })
+      const res = await fetch("/api/notifications/mark-all-read", { method: "POST" })
+
+      if (!res.ok) {
+        console.error("[v0] Mark all as read failed with status:", res.status)
+        return
+      }
+
       setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })))
     } catch (error) {
       console.error("[v0] Error marking all as read:", error)
@@ -81,11 +102,16 @@ export function NotificationCenter() {
       case "error":
         return "✕"
       case "deposit":
+      case "deposit_approved":
         return "💰"
       case "rental":
+      case "rental_created":
         return "📱"
       case "refund":
+      case "refund_processed":
         return "↩️"
+      case "otp_received":
+        return "🔑"
       default:
         return "ℹ️"
     }

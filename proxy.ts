@@ -5,18 +5,22 @@ import { applyRateLimit } from "./lib/rate-limiter"
 import { securityHeaders } from "./lib/security/content-security"
 
 export async function proxy(request: NextRequest) {
-  const rateLimitResult = await applyRateLimit(request)
-  if (!rateLimitResult.success) {
+  const ip = request.ip || request.headers.get("x-forwarded-for") || request.headers.get("x-real-ip") || "unknown"
+  const identifier = `proxy:${ip}`
+
+  try {
+    await applyRateLimit(identifier, "api")
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : "Too many requests. Please try again later."
     return new NextResponse(
       JSON.stringify({
-        error: "Too many requests. Please try again later.",
-        retryAfter: rateLimitResult.retryAfter,
+        error: errorMessage,
       }),
       {
         status: 429,
         headers: {
           "Content-Type": "application/json",
-          "Retry-After": String(rateLimitResult.retryAfter || 60),
+          "Retry-After": "60",
         },
       },
     )
@@ -27,10 +31,6 @@ export async function proxy(request: NextRequest) {
   Object.entries(securityHeaders).forEach(([key, value]) => {
     response.headers.set(key, value)
   })
-
-  response.headers.set("X-RateLimit-Limit", String(rateLimitResult.limit))
-  response.headers.set("X-RateLimit-Remaining", String(rateLimitResult.remaining))
-  response.headers.set("X-RateLimit-Reset", String(rateLimitResult.reset))
 
   return response
 }

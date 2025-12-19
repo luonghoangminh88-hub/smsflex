@@ -59,11 +59,8 @@ export function BankTransactionsClient({ transactions: initialTransactions }: Pr
   const handleRunCron = async () => {
     setIsProcessing(true)
     try {
-      const response = await fetch("/api/cron/check-bank-emails", {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${process.env.NEXT_PUBLIC_CRON_SECRET || "your-secret-key"}`,
-        },
+      const response = await fetch("/api/admin/trigger-email-scan", {
+        method: "POST",
       })
 
       const data = await response.json()

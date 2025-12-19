@@ -38,13 +38,30 @@ export class AutoPaymentProcessor {
     }
 
     try {
+      const emailUser = process.env.EMAIL_USER
+      const emailPassword = process.env.EMAIL_PASSWORD
+      const emailHost = process.env.EMAIL_HOST || "imap.gmail.com"
+      const emailPort = Number.parseInt(process.env.EMAIL_PORT || "993")
+
+      if (!emailUser || !emailPassword) {
+        const errorMsg =
+          "Email credentials not configured. Please set EMAIL_USER and EMAIL_PASSWORD in environment variables."
+        console.error(`[v0] ${errorMsg}`)
+        result.errors.push(errorMsg)
+        return result
+      }
+
+      console.log(`[v0] Connecting to ${emailHost}:${emailPort} as ${emailUser}`)
+
       // Initialize IMAP client
       const imapClient = new ImapClient({
-        user: process.env.EMAIL_USER || "",
-        password: process.env.EMAIL_PASSWORD || "",
-        host: process.env.EMAIL_HOST || "imap.gmail.com",
-        port: Number.parseInt(process.env.EMAIL_PORT || "993"),
+        user: emailUser,
+        password: emailPassword,
+        host: emailHost,
+        port: emailPort,
         tls: true,
+        authTimeout: 15000, // 15 seconds
+        connTimeout: 15000,
       })
 
       const { data: activePaymentMethods } = await this.supabase
@@ -78,7 +95,17 @@ export class AutoPaymentProcessor {
 
       console.log("[v0] Monitoring bank emails:", bankEmails)
 
-      const emails = await imapClient.fetchUnseenEmails(bankEmails)
+      let emails: any[] = []
+      try {
+        emails = await imapClient.fetchUnseenEmails(bankEmails)
+      } catch (error) {
+        const errorMsg = error instanceof Error ? error.message : "Unknown IMAP error"
+        console.error(`[v0] Failed to fetch emails: ${errorMsg}`)
+        result.errors.push(`Email fetch failed: ${errorMsg}`)
+
+        // Return early but with detailed error info
+        return result
+      }
 
       console.log(`[v0] Found ${emails.length} unseen emails`)
 
@@ -88,26 +115,31 @@ export class AutoPaymentProcessor {
 
         const emailText = email.text || email.html || ""
         console.log(`[v0] Processing email from: ${email.from}, subject: ${email.subject}`)
+        console.log(`[v0] Email text length: ${emailText.length} characters`)
+        console.log(`[v0] Email preview (first 500 chars):`, emailText.substring(0, 500))
 
         const transaction = BankEmailParser.parse(email.from, emailText)
 
         if (!transaction) {
           result.errorCount++
-          const errorMsg = `Failed to parse email from ${email.from}`
+          const errorMsg = `Failed to parse email from "${email.from}"`
           console.error(`[v0] ${errorMsg}`)
+          console.error(`[v0] Email subject: ${email.subject}`)
+          console.error(`[v0] Email text preview:`, emailText.substring(0, 1000))
           result.errors.push(errorMsg)
 
           await this.supabase.from("bank_transactions").insert({
-            transaction_id: `FAILED_${Date.now()}`,
+            transaction_id: `FAILED_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             amount: 0,
-            content: email.subject,
+            content: email.subject || "No subject",
             sender_info: email.from,
             bank_name: "Unknown",
             email_subject: email.subject,
             email_from: email.from,
             email_date: email.date,
+            email_body: emailText.substring(0, 5000), // Store first 5000 chars for analysis
             status: "parse_failed",
-            error_message: "Failed to parse email content",
+            error_message: "Failed to parse email content - check email_body for raw content",
           })
 
           continue
@@ -238,7 +270,6 @@ export class AutoPaymentProcessor {
 
       if (depositError) {
         console.error("[v0] Deposit update error:", depositError)
-        // Rollback balance?
         return { success: false, error: depositError.message }
       }
 
@@ -254,10 +285,11 @@ export class AutoPaymentProcessor {
 
       await this.supabase.from("notifications").insert({
         user_id: userId,
-        type: "deposit",
+        type: "deposit_approved",
         title: "Nạp tiền thành công",
         message: `Tài khoản của bạn đã được cộng ${deposit.amount.toLocaleString("vi-VN")}đ`,
         metadata: { deposit_id: depositId, amount: deposit.amount },
+        is_read: false,
       })
 
       console.log(`[v0] Successfully completed deposit ${depositId} for user ${userId}`)

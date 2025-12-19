@@ -7,6 +7,8 @@ export interface EmailConfig {
   host: string
   port: number
   tls: boolean
+  authTimeout?: number
+  connTimeout?: number
 }
 
 export interface ParsedEmail {
@@ -53,7 +55,17 @@ export class ImapClient {
         host: this.config.host,
         port: this.config.port,
         tls: this.config.tls,
-        tlsOptions: { rejectUnauthorized: false },
+        tlsOptions: {
+          rejectUnauthorized: false,
+          minVersion: "TLSv1.2", // More secure TLS version
+        },
+        authTimeout: this.config.authTimeout || 10000, // 10 seconds auth timeout
+        connTimeout: this.config.connTimeout || 10000, // 10 seconds connection timeout
+        keepalive: {
+          interval: 10000,
+          idleInterval: 300000,
+          forceNoop: true,
+        },
       })
 
       const emails: ParsedEmail[] = []
@@ -142,10 +154,32 @@ export class ImapClient {
 
       imap.once("error", (err) => {
         console.error("[v0] IMAP error:", err)
+        if (err.source === "authentication") {
+          console.error("[v0] Authentication failed. Please check:")
+          console.error("  1. EMAIL_USER and EMAIL_PASSWORD are correctly set")
+          console.error("  2. For Gmail: Enable 'Less secure app access' or use App Password")
+          console.error("  3. For other providers: Check IMAP settings and credentials")
+        }
         reject(err)
       })
 
-      imap.connect()
+      const connectionTimeout = setTimeout(() => {
+        console.error("[v0] IMAP connection timeout")
+        imap.end()
+        reject(new Error("Connection timeout"))
+      }, 30000) // 30 seconds total timeout
+
+      imap.once("ready", () => {
+        clearTimeout(connectionTimeout)
+      })
+
+      try {
+        imap.connect()
+      } catch (error) {
+        clearTimeout(connectionTimeout)
+        console.error("[v0] Failed to connect to IMAP:", error)
+        reject(error)
+      }
     })
   }
 }
