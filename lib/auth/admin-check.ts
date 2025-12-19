@@ -1,11 +1,14 @@
 import { createClient } from "@/lib/supabase/server"
 import { redirect } from "next/navigation"
+import { unstable_noStore as noStore } from "next/cache"
 
 /**
  * Check if the current authenticated user is an admin
  * This should be called in server-side code (API routes, server components)
  */
 export async function isAdmin(): Promise<boolean> {
+  noStore()
+
   try {
     const supabase = await createClient()
 
@@ -38,6 +41,8 @@ export async function isAdmin(): Promise<boolean> {
  * This should be called at the top of admin server components/pages
  */
 export async function requireAdminAuth(): Promise<void> {
+  noStore()
+
   try {
     const supabase = await createClient()
 
@@ -71,6 +76,8 @@ export async function requireAdminAuth(): Promise<void> {
  * Returns null if user is not authenticated
  */
 export async function getCurrentUserProfile() {
+  noStore()
+
   try {
     const supabase = await createClient()
 
