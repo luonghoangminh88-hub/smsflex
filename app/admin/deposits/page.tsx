@@ -5,6 +5,8 @@ import { DepositVerificationActions } from "@/components/admin/deposit-verificat
 import { formatVND } from "@/lib/currency"
 import { Clock, CheckCircle2, XCircle, AlertCircle } from "lucide-react"
 
+export const dynamic = "force-dynamic"
+
 export default async function AdminDepositsPage() {
   const supabase = await createClient()
 

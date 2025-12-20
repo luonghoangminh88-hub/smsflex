@@ -3,6 +3,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 
+export const dynamic = "force-dynamic"
+
 export default async function AdminUsersPage() {
   const supabase = await createClient()
 

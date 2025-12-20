@@ -2,6 +2,8 @@ import { createAdminClient } from "@/lib/supabase/server"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Users, Phone, Wallet, DollarSign, Activity } from "lucide-react"
 
+export const dynamic = "force-dynamic"
+
 export default async function AdminDashboardPage() {
   const supabaseAdmin = await createAdminClient()
 

@@ -4,6 +4,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { RefundPolicyForm } from "@/components/admin/refund-policy-form"
 
+export const dynamic = "force-dynamic"
+
 export default async function RefundPoliciesPage() {
   const supabase = await createClient()
 

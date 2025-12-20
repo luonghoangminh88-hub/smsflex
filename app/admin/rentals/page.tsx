@@ -3,6 +3,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { RentalStatus } from "@/components/rental-status"
 
+export const dynamic = "force-dynamic"
+
 export default async function AdminRentalsPage() {
   const supabase = await createClient()
 
