@@ -277,12 +277,52 @@ export class AutoPaymentProcessor {
             continue
           }
 
-          const { data: deposit } = await this.supabase
-            .from("deposits")
-            .select("*, profiles!inner(*)")
-            .eq("status", "pending")
-            .eq("payment_code", transaction.content)
-            .single()
+          let deposit: any = null
+          let depositError: any = null
+
+          // Strategy 1: If userId exists in transaction, match by user_id
+          if (transaction.userId) {
+            console.log(`[v0] Attempting to match deposit by user_id: ${transaction.userId}`)
+
+            const { data, error } = await this.supabase
+              .from("deposits")
+              .select("*, profiles!inner(*)")
+              .eq("status", "pending")
+              .eq("user_id", transaction.userId)
+              .order("created_at", { ascending: false })
+              .limit(1)
+              .maybeSingle()
+
+            deposit = data
+            depositError = error
+
+            if (deposit) {
+              console.log(`[v0] ✅ Found deposit by user_id: ${deposit.id}`)
+            } else {
+              console.log(`[v0] ⚠️ No pending deposit found for user_id: ${transaction.userId}`)
+            }
+          }
+
+          // Strategy 2: If no userId or no match, try payment_code match
+          if (!deposit && transaction.content) {
+            console.log(`[v0] Attempting to match deposit by payment_code in content: ${transaction.content}`)
+
+            const { data, error } = await this.supabase
+              .from("deposits")
+              .select("*, profiles!inner(*)")
+              .eq("status", "pending")
+              .eq("payment_code", transaction.content)
+              .maybeSingle()
+
+            deposit = data
+            depositError = error
+
+            if (deposit) {
+              console.log(`[v0] ✅ Found deposit by payment_code: ${deposit.id}`)
+            } else {
+              console.log(`[v0] ⚠️ No pending deposit found for payment_code: ${transaction.content}`)
+            }
+          }
 
           if (deposit) {
             // Verify amount matches
@@ -292,7 +332,7 @@ export class AutoPaymentProcessor {
 
               if (processed.success) {
                 result.successCount++
-                console.log(`[v0] Successfully processed deposit ${deposit.id}`)
+                console.log(`[v0] ✅ Successfully processed deposit ${deposit.id}`)
               } else {
                 result.errorCount++
                 result.errors.push(processed.error || "Failed to complete deposit")
@@ -304,10 +344,13 @@ export class AutoPaymentProcessor {
                 .update({
                   status: "manual_review",
                   error_message: `Amount mismatch: expected ${deposit.amount}, got ${transaction.amount}`,
+                  user_id: deposit.user_id,
+                  deposit_id: deposit.id,
                 })
                 .eq("id", bankTx.id)
 
               result.manualReviewCount++
+              console.log(`[v0] ⚠️ Amount mismatch for deposit ${deposit.id}`)
             }
           } else {
             // No matching deposit found - manual review
@@ -316,10 +359,12 @@ export class AutoPaymentProcessor {
               .update({
                 status: "manual_review",
                 error_message: "No matching deposit found",
+                user_id: transaction.userId || null,
               })
               .eq("id", bankTx.id)
 
             result.manualReviewCount++
+            console.log(`[v0] ⚠️ No matching deposit found for transaction ${transaction.transactionId}`)
           }
         } catch (dbError) {
           result.errorCount++
