@@ -77,13 +77,14 @@ const BANK_CONFIGS: BankParserConfig[] = [
     name: "Timo",
     fromEmail: "timo", // Match both support@timo.vn and any @timo or timo-related emails
     patterns: {
-      transactionId: /(?:MBVCB[.\d]+|[A-Z0-9]{16}|[\dA-Z]{12,20})/i,
+      transactionId: /(?:MBVCB\.\d+\.[A-Z0-9]+|NAPTEND?[A-Z0-9]+)/i,
 
-      amount: /(?:v[uừ]a\s*)?(?:t[aă]ng|nh[aậ]n|chuy[eể]n|gi[aả]m)?\s*([0-9,.]+)\s*VND/i,
+      amount: /(?:t[aă]ng|nh[aậ]n(?:\s+được)?|chuy[eể]n|gi[aả]m|c[oộ]ng)?\s*([0-9]{1,3}(?:[.,][0-9]{3})*)\s*VND/i,
 
-      content: /(?:M[ôo]\s*t[aả]|N[oô]i\s*dung)[:\s]*(.+?)(?=(?:C[aả]m\s*[oơ]n|Tr[aâ]n\s*tr[oọ]ng|$))/is,
+      content:
+        /(?:M[ôo]\s*t[aả]|N[oô]i\s*dung|Di[eễ]n\s*gi[aả]i)[:\s]*(.+?)(?=(?:C[aả]m\s*[oơ]n|Tr[aâ]n\s*tr[oọ]ng|Email|$))/is,
 
-      sender: /(?:T[uừ]|From|Ng[ưu][oờ]i\s*g[ửu]i|CT\s*tu)\s*(\d+)\s*([A-Z\s]+)/i,
+      sender: /(?:CT\s+tu|T[uừ](?:\s+TK)?|From)\s+(\d+)\s+([A-Z\s]+?)(?=\s+toi|$)/i,
     },
   },
   {
@@ -174,7 +175,7 @@ export class BankEmailParser {
 
       // Extract transaction ID from content or email body
       let transactionId = ""
-      const mbvcbMatch = emailText.match(/MBVCB\.\d+/i)
+      const mbvcbMatch = emailText.match(/MBVCB\.\d+\.[A-Z0-9]+/i)
       if (mbvcbMatch) {
         transactionId = mbvcbMatch[0]
         console.log("[v0] Found MBVCB transaction ID:", transactionId)
@@ -221,6 +222,8 @@ export class BankEmailParser {
 
   private static extractUserId(content: string): string | undefined {
     const patterns = [
+      /NAPTEN([A-Z0-9]+)/i, // Match entire NAPTEN code
+      /NAPTEND([A-Z0-9]+)/i, // Match NAPTEND variant
       /NAPTEN[A-Z]?(\d+)/i, // Match NAPTEN or NAPTENF followed by numbers
       /NAP\s*(\d+)/i,
       /DEPOSIT\s*(\d+)/i,
