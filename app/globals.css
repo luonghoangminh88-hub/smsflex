@@ -130,6 +130,22 @@
   }
 }
 
+/* Added custom breakpoint for extra small screens (xs) */
+@layer utilities {
+  /* Custom xs breakpoint for screens >= 475px */
+  @media (min-width: 475px) {
+    .xs\:flex {
+      display: flex;
+    }
+    .xs\:hidden {
+      display: none;
+    }
+    .xs\:block {
+      display: block;
+    }
+  }
+}
+
 /* Use regular CSS properties instead of @apply for custom colors */
 .fivesim-gradient {
   background: linear-gradient(135deg, #5b8dc9 0%, #4a6fa5 100%);
