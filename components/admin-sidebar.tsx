@@ -88,10 +88,15 @@ export function AdminSidebar() {
   return (
     <aside className="w-64 border-r bg-card flex flex-col">
       <div className="p-6 border-b">
-        <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-          Admin Panel
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">OTP Rental System</p>
+        <div className="flex items-center gap-3 mb-2">
+          <img src="/logo-otpviet.jpg" alt="OTPVIET" className="h-10 w-10 rounded-lg" />
+          <div>
+            <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+              OTPVIET
+            </h1>
+            <p className="text-xs text-muted-foreground">Admin Panel</p>
+          </div>
+        </div>
       </div>
 
       <nav className="flex-1 p-4 space-y-2">

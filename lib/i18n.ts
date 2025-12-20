@@ -13,7 +13,7 @@ const translations = {
     },
     // Dashboard
     dashboard: {
-      subtitle: "Hệ thống thuê số điện thoại ảo",
+      subtitle: "Số Điện Thoại Ảo - OTPVIET",
       balance: "Số dư tài khoản",
       welcome: "Chào mừng",
       quickActions: "Thao tác nhanh",
@@ -118,7 +118,7 @@ const translations = {
     },
     // Dashboard
     dashboard: {
-      subtitle: "Virtual Phone Number Rental System",
+      subtitle: "Virtual Phone Number - OTPVIET",
       balance: "Account Balance",
       welcome: "Welcome",
       quickActions: "Quick Actions",

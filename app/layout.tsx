@@ -19,10 +19,10 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  title: "OTP Rental - Thuê SIM ảo nhận OTP nhanh trong 30 giây | Giá từ 2,000đ",
+  title: "OTPVIET - Thuê SIM ảo nhận OTP nhanh trong 30 giây | Giá từ 2,000đ",
   description:
     "Giải pháp thuê SIM ảo số 1 Việt Nam. Hỗ trợ 200+ dịch vụ (Telegram, Facebook, Instagram, WhatsApp), 50+ quốc gia. Nhận OTP trong 30 giây, giá từ 2,000đ. Hoàn tiền tự động nếu không nhận được OTP.",
-  keywords: "thuê sim ảo, nhận otp, số điện thoại ảo, otp rental, telegram otp, facebook otp, sim ảo việt nam",
+  keywords: "thuê sim ảo, nhận otp, số điện thoại ảo, otpviet, telegram otp, facebook otp, sim ảo việt nam",
   generator: "v0.app",
   icons: {
     icon: [

@@ -117,9 +117,12 @@ export default function SignupPage() {
     <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10 bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
-          <h1 className="text-4xl font-bold text-balance bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-            OTP Rental
-          </h1>
+          <div className="flex items-center justify-center gap-3 mb-2">
+            <img src="/logo-otpviet.jpg" alt="OTPVIET" className="h-12 w-12 rounded-lg" />
+            <h1 className="text-4xl font-bold text-balance bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+              OTPVIET
+            </h1>
+          </div>
           <p className="mt-2 text-muted-foreground">Tạo tài khoản mới</p>
         </div>
 
