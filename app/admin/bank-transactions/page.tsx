@@ -14,7 +14,18 @@ export default async function BankTransactionsPage() {
 
   console.log("[v0] Checking bank_transactions table...")
 
-  // Fetch bank transactions
+  const { data: rawTransactions, error: rawError } = await supabase
+    .from("bank_transactions")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .limit(100)
+
+  console.log("[v0] Raw transactions query result:", {
+    count: rawTransactions?.length,
+    error: rawError,
+    sample: rawTransactions?.[0],
+  })
+
   const { data: transactions, error } = await supabase
     .from("bank_transactions")
     .select(`
@@ -34,6 +45,12 @@ export default async function BankTransactionsPage() {
 
   if (error) {
     console.error("[v0] Error fetching bank transactions:", error)
+    console.error("[v0] Error details:", {
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+      code: error.code,
+    })
 
     // Check if it's a "table not found" error
     if (error.message?.includes("relation") && error.message?.includes("does not exist")) {
@@ -54,7 +71,19 @@ export default async function BankTransactionsPage() {
         </div>
       )
     }
+
+    if (error.message?.includes("column") || error.message?.includes("foreign key")) {
+      console.warn("[v0] JOIN failed, falling back to raw transactions")
+      console.log("[v0] Using raw transactions:", rawTransactions?.length)
+    }
   }
+
+  const finalTransactions = transactions || rawTransactions || []
+
+  console.log("[v0] Final transactions to display:", {
+    count: finalTransactions.length,
+    statuses: finalTransactions.map((t) => t.status),
+  })
 
   // Get statistics
   const { data: stats } = await supabase.from("bank_transactions").select("status")
@@ -71,6 +100,16 @@ export default async function BankTransactionsPage() {
         <h1 className="text-3xl font-bold">Giao dịch ngân hàng</h1>
         <p className="text-muted-foreground">Quản lý giao dịch tự động từ email ngân hàng</p>
       </div>
+
+      {error && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Lỗi khi tải giao dịch: {error.message}
+            {error.hint && <div className="mt-1 text-xs">Gợi ý: {error.hint}</div>}
+          </AlertDescription>
+        </Alert>
+      )}
 
       <div className="grid gap-4 md:grid-cols-5">
         <Card>
@@ -109,7 +148,7 @@ export default async function BankTransactionsPage() {
         </Card>
       </div>
 
-      <BankTransactionsClient transactions={transactions || []} />
+      <BankTransactionsClient transactions={finalTransactions} />
     </div>
   )
 }
