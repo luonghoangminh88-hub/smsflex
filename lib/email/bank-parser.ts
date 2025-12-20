@@ -253,6 +253,7 @@ export class BankEmailParser {
   private static extractUserId(content: string): string | undefined {
     const patterns = [
       /NAPTEN([A-Z0-9]{32})/i, // Match full UUID without hyphens (32 chars)
+      /NAPTEN([A-Z0-9]{12})/i, // Match new format: 8 chars userId + 4 random
       /NAPTEN([A-Z0-9]+)/i,
       /NAP\s*TEN\s*([A-Z0-9]+)/i,
       /NAP\s*(\d+)/i,
@@ -266,12 +267,18 @@ export class BankEmailParser {
       if (match && match[1]) {
         console.log(`[v0] Extracted user ID "${match[1]}" using pattern: ${pattern.toString()}`)
         const extractedId = match[1]
+
         if (extractedId.length === 32 && /^[A-Z0-9]{32}$/i.test(extractedId)) {
           // Format: 8-4-4-4-12
           const formatted =
             `${extractedId.substring(0, 8)}-${extractedId.substring(8, 12)}-${extractedId.substring(12, 16)}-${extractedId.substring(16, 20)}-${extractedId.substring(20, 32)}`.toLowerCase()
           console.log(`[v0] Formatted UUID: ${formatted}`)
           return formatted
+        } else if (extractedId.length === 12 && /^[A-Z0-9]{12}$/i.test(extractedId)) {
+          const userIdPrefix = extractedId.substring(0, 8).toLowerCase()
+          console.log(`[v0] Extracted user ID prefix from short code: ${userIdPrefix}`)
+          // Return the prefix - processor will match profiles starting with this
+          return userIdPrefix
         }
         return extractedId
       }

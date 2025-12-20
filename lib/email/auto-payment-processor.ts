@@ -318,15 +318,12 @@ export class AutoPaymentProcessor {
           if (!deposit && transaction.content) {
             console.log(`[v0] Attempting to match deposit by payment_code in content: ${transaction.content}`)
 
-            // Extract all potential payment codes from the transaction content
-            // Look for patterns like NAPTEN followed by hex characters
-            const paymentCodeMatch = transaction.content.match(/NAPTEN[A-F0-9]{8,}/i)
+            const paymentCodeMatch = transaction.content.match(/NAPTEN[A-Z0-9]{12,}/i)
 
             if (paymentCodeMatch) {
               const extractedCode = paymentCodeMatch[0]
               console.log(`[v0] Extracted payment code from content: ${extractedCode}`)
 
-              // Try to find a deposit where the payment_code is the beginning of the extracted code
               const { data: deposits, error } = await this.supabase
                 .from("deposits")
                 .select("*, profiles!inner(*)")
@@ -334,11 +331,20 @@ export class AutoPaymentProcessor {
                 .order("created_at", { ascending: false })
 
               if (deposits && deposits.length > 0) {
-                // Find the deposit whose payment_code matches the start of the extracted code
-                deposit = deposits.find((d) => extractedCode.toUpperCase().startsWith(d.payment_code.toUpperCase()))
+                // Try exact match first
+                deposit = deposits.find((d) => d.payment_code.toUpperCase() === extractedCode.toUpperCase())
+
+                // If no exact match, try prefix match (for old long codes)
+                if (!deposit) {
+                  deposit = deposits.find(
+                    (d) =>
+                      extractedCode.toUpperCase().startsWith(d.payment_code.toUpperCase()) ||
+                      d.payment_code.toUpperCase().startsWith(extractedCode.toUpperCase()),
+                  )
+                }
 
                 if (deposit) {
-                  console.log(`[v0] ✅ Found deposit by matching payment_code prefix: ${deposit.id}`)
+                  console.log(`[v0] ✅ Found deposit by matching payment_code: ${deposit.id}`)
                 } else {
                   console.log(`[v0] ⚠️ No pending deposit found with matching payment_code`)
                 }
@@ -533,11 +539,19 @@ export class AutoPaymentProcessor {
       const matchingProfile = profiles.find((p) => p.id.replace(/-/g, "").toLowerCase().startsWith(userIdPrefix))
 
       if (!matchingProfile) {
-        console.log(`[v0] ⚠️ No user found with ID prefix: ${userIdPrefix}`)
-        return { success: false, error: `No user found matching ID prefix ${userIdPrefix}` }
+        console.log(`[v0] ⚠️ No user found matching prefix: ${userIdPrefix}`)
+        // Update transaction to manual review
+        await this.supabase
+          .from("bank_transactions")
+          .update({
+            status: "manual_review",
+            error_message: `No user found with ID starting with ${userIdPrefix}`,
+          })
+          .eq("id", bankTxId)
+        return { success: false, error: "No matching user found" }
       }
 
-      console.log(`[v0] ✅ Found matching user: ${matchingProfile.email}`)
+      console.log(`[v0] ✅ Found matching user: ${matchingProfile.email} (${matchingProfile.id})`)
 
       // Create a deposit for this user
       const { data: newDeposit, error: depositError } = await this.supabase
@@ -546,7 +560,7 @@ export class AutoPaymentProcessor {
           user_id: matchingProfile.id,
           amount: amount,
           payment_method: "bank_transfer",
-          payment_code: content.match(/NAPTEN[A-F0-9]{8,}/i)?.[0] || `AUTO_${Date.now()}`,
+          payment_code: content.match(/NAPTEN[A-Z0-9]{12,}/i)?.[0] || `AUTO_${Date.now()}`,
           status: "pending",
         })
         .select()
