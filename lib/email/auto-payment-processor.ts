@@ -52,17 +52,18 @@ export class AutoPaymentProcessor {
   private toVietnamTime(date: Date | string): string {
     const d = typeof date === "string" ? new Date(date) : date
 
-    // Convert to Vietnam timezone (UTC+7)
-    // Get UTC time and add 7 hours
-    const vietnamOffset = 7 * 60 // 7 hours in minutes
-    const localOffset = d.getTimezoneOffset() // Current timezone offset in minutes
-    const totalOffset = vietnamOffset + localOffset
+    // Vietnam is UTC+7
+    // We want to interpret the input date as Vietnam time and store it correctly
+    const vietnamOffset = 7 * 60 * 60 * 1000 // 7 hours in milliseconds
 
-    const vietnamTime = new Date(d.getTime() + totalOffset * 60 * 1000)
+    // If the date is already in UTC, add 7 hours to get Vietnam time
+    const vietnamTime = new Date(d.getTime() + vietnamOffset)
 
-    console.log("[v0] Original date:", d.toISOString())
-    console.log("[v0] Vietnam time:", vietnamTime.toISOString())
+    console.log("[v0] Original date (UTC):", d.toISOString())
+    console.log("[v0] Vietnam time (UTC+7):", vietnamTime.toISOString())
+    console.log("[v0] Vietnam local format:", vietnamTime.toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" }))
 
+    // Return ISO string which will be stored correctly in Supabase
     return vietnamTime.toISOString()
   }
 
@@ -176,6 +177,7 @@ export class AutoPaymentProcessor {
 
         const emailText = email.text || email.html || ""
         console.log(`[v0] Processing email from: ${email.from}, subject: ${email.subject}`)
+        console.log(`[v0] Email date from header:`, email.date)
         console.log(`[v0] Email text length: ${emailText.length} characters`)
 
         // Parse email
@@ -263,7 +265,7 @@ export class AutoPaymentProcessor {
               bank_name: transaction.bankName,
               email_subject: email.subject,
               email_from: email.from,
-              email_date: this.toVietnamTime(email.date), // Convert email date to Vietnam timezone before storing
+              email_date: email.date.toISOString(), // Email date is already parsed correctly by IMAP
               status: "pending",
             })
             .select()
@@ -365,7 +367,7 @@ export class AutoPaymentProcessor {
         .from("deposits")
         .update({
           status: "completed",
-          updated_at: this.toVietnamTime(new Date()),
+          updated_at: new Date().toISOString(),
         })
         .eq("id", depositId)
 
@@ -380,7 +382,7 @@ export class AutoPaymentProcessor {
           status: "success",
           user_id: userId,
           deposit_id: depositId,
-          processed_at: this.toVietnamTime(new Date()),
+          processed_at: new Date().toISOString(),
         })
         .eq("id", bankTxId)
 

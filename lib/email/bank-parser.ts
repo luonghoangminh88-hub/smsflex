@@ -1,3 +1,4 @@
+
 export interface BankTransaction {
   transactionId: string
   amount: number
@@ -113,7 +114,7 @@ export class BankEmailParser {
     })
 
     if (!config) {
-      console.log("[v0] ❌ No parser config found for:", actualEmail)
+      console.log("[v0] No parser config found for:", actualEmail)
       console.log(
         "[v0] Supported emails:",
         BANK_CONFIGS.map((c) => c.fromEmail),
@@ -122,9 +123,15 @@ export class BankEmailParser {
     }
 
     try {
-      console.log(`[v0] ✅ Using parser for: ${config.name}`)
+      console.log(`[v0] Using parser for: ${config.name}`)
       console.log("[v0] Email text length:", emailText.length)
       console.log("[v0] Email text preview (first 1000 chars):", emailText.substring(0, 1000))
+
+      const timoDateMatch = emailText.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2})/i)
+      if (timoDateMatch && config.name === "Timo") {
+        const [_, day, month, year, hour, minute] = timoDateMatch
+        console.log(`[v0] Found Timo transaction date: ${day}/${month}/${year} ${hour}:${minute} (Vietnam time)`)
+      }
 
       const amountMatch = emailText.match(config.patterns.amount)
       if (!amountMatch) {
