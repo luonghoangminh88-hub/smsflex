@@ -1,17 +1,22 @@
 export const dynamic = "force-dynamic"
 export const revalidate = 0
+export const maxDuration = 60
 
 import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
 import { AutoPaymentProcessor } from "@/lib/email/auto-payment-processor"
 
-export async function POST() {
-  try {
-    console.log("[v0] Starting email scan trigger...")
+export async function POST(request: Request) {
+  console.log("[v0] ===== Email Scan Trigger Started =====")
+  console.log("[v0] Request URL:", request.url)
+  console.log("[v0] Request method:", request.method)
+  console.log("[v0] Request headers:", Object.fromEntries(request.headers))
 
+  try {
     let supabase
     try {
       supabase = await createClient()
+      console.log("[v0] Supabase client created successfully")
     } catch (error) {
       console.error("[v0] Failed to create Supabase client:", error)
       return NextResponse.json(
@@ -25,6 +30,7 @@ export async function POST() {
     }
 
     // 1. Kiểm tra đăng nhập qua Cookie
+    console.log("[v0] Checking authentication...")
     const {
       data: { user },
       error: authError,
@@ -46,6 +52,7 @@ export async function POST() {
     console.log("[v0] User authenticated:", user.id)
 
     // 2. Kiểm tra quyền Admin
+    console.log("[v0] Checking admin permissions...")
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
       .select("role")
@@ -65,19 +72,27 @@ export async function POST() {
       return NextResponse.json({ success: false, error: "Admin access required" }, { status: 403 })
     }
 
-    console.log("[v0] Admin check passed")
+    console.log("[v0] Admin check passed, starting email processing...")
 
     try {
       const processor = new AutoPaymentProcessor()
       const result = await processor.processEmails()
 
-      console.log("[v0] Email scan completed:", result)
+      console.log("[v0] Email scan completed successfully:", result)
 
-      return NextResponse.json({
-        success: true,
-        result,
-        timestamp: new Date().toISOString(),
-      })
+      return NextResponse.json(
+        {
+          success: true,
+          result,
+          timestamp: new Date().toISOString(),
+        },
+        {
+          status: 200,
+          headers: {
+            "Content-Type": "application/json",
+          },
+        },
+      )
     } catch (processorError) {
       console.error("[v0] Email processor error:", processorError)
       return NextResponse.json(
@@ -100,4 +115,14 @@ export async function POST() {
       { status: 500 },
     )
   }
+}
+
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      "Access-Control-Allow-Methods": "POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    },
+  })
 }

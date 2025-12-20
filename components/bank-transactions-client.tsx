@@ -59,11 +59,28 @@ export function BankTransactionsClient({ transactions: initialTransactions }: Pr
   const handleRunCron = async () => {
     setIsProcessing(true)
     try {
+      console.log("[v0] Starting email scan request...")
+
       const response = await fetch("/api/admin/trigger-email-scan", {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
       })
 
+      console.log("[v0] Response status:", response.status)
+      console.log("[v0] Response headers:", Object.fromEntries(response.headers))
+
+      if (!response.ok) {
+        console.error("[v0] Response not OK:", response.status, response.statusText)
+        const errorText = await response.text()
+        console.error("[v0] Error response body:", errorText)
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      }
+
       const data = await response.json()
+      console.log("[v0] Response data:", data)
 
       if (data.success) {
         alert(
@@ -74,8 +91,8 @@ export function BankTransactionsClient({ transactions: initialTransactions }: Pr
         alert("Lỗi: " + data.error)
       }
     } catch (error) {
-      console.error("Error running cron:", error)
-      alert("Có lỗi xảy ra khi chạy cron job")
+      console.error("[v0] Error running cron:", error)
+      alert(`Có lỗi xảy ra: ${error instanceof Error ? error.message : "Unknown error"}`)
     } finally {
       setIsProcessing(false)
     }
