@@ -11,12 +11,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { formatVND } from "@/lib/currency"
-import { toast } from "sonner"
-
-const PRESET_AMOUNTS = [50000, 100000, 200000, 500000, 1000000]
-const POLL_INTERVAL = 3000 // Poll every 3 seconds
-const MAX_POLL_COUNT = 100 // Stop after 5 minutes (100 * 3s)
-const SUCCESS_REDIRECT_DELAY = 3000 // Redirect after 3 seconds
+import { useToast } from "@/hooks/use-toast"
 
 interface PaymentMethod {
   id: string
@@ -49,6 +44,7 @@ export default function DepositPage() {
   const [pollCount, setPollCount] = useState(0)
   const [showSuccessAnimation, setShowSuccessAnimation] = useState(false)
   const router = useRouter()
+  const { toast } = useToast()
 
   useEffect(() => {
     loadPaymentMethods()
@@ -84,26 +80,27 @@ export default function DepositPage() {
             // Ignore audio errors
           }
 
-          // Show toast notification
-          toast.success("Thanh toán thành công!", {
+          toast({
+            title: "Thanh toán thành công!",
             description: `+${formatVND(depositInfo.amount)} đã được cộng vào tài khoản`,
-            duration: 5000,
           })
 
           // Auto-redirect after 3 seconds
           setTimeout(() => {
             router.push("/dashboard")
-          }, SUCCESS_REDIRECT_DELAY)
+          }, 3000)
 
           return
         }
 
         setPollCount((prev) => {
           const newCount = prev + 1
-          if (newCount >= MAX_POLL_COUNT) {
+          if (newCount >= 100) {
             setIsPolling(false)
-            toast.warning("Vẫn chưa nhận được xác nhận", {
+            toast({
+              title: "Vẫn chưa nhận được xác nhận",
               description: "Vui lòng kiểm tra lại giao dịch hoặc liên hệ hỗ trợ",
+              variant: "destructive",
             })
           }
           return newCount
@@ -111,10 +108,10 @@ export default function DepositPage() {
       } catch (err) {
         console.error("[v0] Error polling deposit status:", err)
       }
-    }, POLL_INTERVAL)
+    }, 3000)
 
     return () => clearInterval(pollInterval)
-  }, [depositInfo, isPolling, pollCount, router])
+  }, [depositInfo, isPolling, pollCount, router, toast])
 
   const loadPaymentMethods = async () => {
     try {
@@ -178,8 +175,10 @@ export default function DepositPage() {
       setShowSuccessAnimation(false)
     } catch (err: any) {
       setError(err.message || "Đã xảy ra lỗi khi tạo yêu cầu nạp tiền")
-      toast.error("Không thể tạo yêu cầu nạp tiền", {
+      toast({
+        title: "Không thể tạo yêu cầu nạp tiền",
         description: err.message,
+        variant: "destructive",
       })
     } finally {
       setIsLoading(false)
@@ -239,8 +238,7 @@ export default function DepositPage() {
                         <span className="font-semibold">Đang chờ xác nhận thanh toán...</span>
                       </div>
                       <p className="text-xs mt-2">
-                        Hệ thống đang tự động kiểm tra giao dịch của bạn (
-                        {Math.floor((pollCount * POLL_INTERVAL) / 1000)}
+                        Hệ thống đang tự động kiểm tra giao dịch của bạn ({Math.floor((pollCount * 3000) / 1000)}
                         s)
                       </p>
                       <p className="text-xs mt-1 opacity-75">
@@ -430,7 +428,7 @@ export default function DepositPage() {
           <div className="space-y-3">
             <Label>Chọn nhanh</Label>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-              {PRESET_AMOUNTS.map((preset) => (
+              {[50000, 100000, 200000, 500000, 1000000].map((preset) => (
                 <Button
                   key={preset}
                   variant={amount === preset.toString() ? "default" : "outline"}
