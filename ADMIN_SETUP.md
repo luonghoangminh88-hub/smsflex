@@ -14,9 +14,9 @@ Hệ thống phân quyền dựa trên trường `role` trong bảng `profiles`:
 
 ### Bước 1: Thêm biến môi trường
 Thêm vào file `.env.local`:
-```env
+\`\`\`env
 ADMIN_SETUP_SECRET=your-strong-secret-key-here
-```
+\`\`\`
 
 ### Bước 2: Đăng ký tài khoản
 1. Truy cập: `http://localhost:3000/auth/signup`
@@ -41,7 +41,7 @@ Sau khi tạo admin xong, **BẮT BUỘC** xóa hoặc bảo vệ các file sau:
 Đăng ký tài khoản thông thường tại `/auth/signup`
 
 ### Bước 2: Chạy SQL Script
-```sql
+\`\`\`sql
 -- Nâng quyền admin cho email cụ thể
 UPDATE public.profiles
 SET role = 'admin'
@@ -51,7 +51,7 @@ WHERE email = 'admin@otprentalsystem.com';
 SELECT id, email, full_name, role 
 FROM public.profiles 
 WHERE role = 'admin';
-```
+\`\`\`
 
 ---
 
@@ -87,12 +87,12 @@ Sau khi tạo admin, kiểm tra bằng cách:
 - [ ] Regularly audit admin accounts
 
 ### Tạo Admin Mới Trong Production:
-```sql
+\`\`\`sql
 -- Chỉ chạy trực tiếp trên database production với quyền cao nhất
 UPDATE public.profiles
 SET role = 'admin'
 WHERE email = 'new-admin@example.com';
-```
+\`\`\`
 
 ---
 
