@@ -57,14 +57,14 @@ export function DashboardHeader({ profile }: DashboardHeaderProps) {
       .toUpperCase() || profile.email[0].toUpperCase()
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-[#4a6fa5] text-white shadow-sm">
+    <header className="sticky top-0 z-50 w-full border-b gradient-primary text-white shadow-lg">
       <div className="container mx-auto flex h-14 sm:h-16 items-center justify-between px-3 sm:px-4">
         <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
           <h1 className="text-base sm:text-lg font-bold flex items-center gap-1.5 sm:gap-2">
-            <div className="bg-white/10 rounded-lg px-2 py-1 sm:px-3 sm:py-1.5">
-              <span className="text-white text-sm sm:text-base">OTP</span>
+            <div className="bg-white/20 rounded-lg px-2 py-1 sm:px-3 sm:py-1.5 backdrop-blur-sm">
+              <span className="text-white text-sm sm:text-base font-extrabold">OTP</span>
             </div>
-            <span className="hidden lg:inline text-sm">{t("dashboard.subtitle")}</span>
+            <span className="hidden lg:inline text-sm font-semibold">Số Điện Thoại Ảo</span>
           </h1>
 
           <nav className="hidden xl:flex items-center gap-1 text-sm ml-4">
