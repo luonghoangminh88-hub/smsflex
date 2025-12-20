@@ -3,6 +3,7 @@ export const revalidate = 0
 
 import { createClient } from "@/lib/supabase/server"
 import { NextResponse } from "next/server"
+import { AutoPaymentProcessor } from "@/lib/email/auto-payment-processor"
 
 export async function POST() {
   try {
@@ -66,80 +67,24 @@ export async function POST() {
 
     console.log("[v0] Admin check passed")
 
-    // 3. Gọi lệnh quét Email
-    const cronSecret = process.env.CRON_SECRET
-
-    if (!cronSecret) {
-      console.error("[v0] CRON_SECRET not configured")
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Server configuration error: CRON_SECRET not set",
-          hint: "Please add CRON_SECRET to environment variables",
-        },
-        { status: 500 },
-      )
-    }
-
-    const baseUrl =
-      process.env.NEXT_PUBLIC_APP_URL || process.env.VERCEL_URL
-        ? `https://${process.env.VERCEL_URL}`
-        : "https://otpviet.com"
-    const cronUrl = `${baseUrl}/api/cron/check-bank-emails`
-
-    console.log("[v0] Calling cron endpoint:", cronUrl)
-
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 60000) // 60 second timeout
-
     try {
-      const response = await fetch(cronUrl, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${cronSecret}`,
-        },
-        cache: "no-store",
-        signal: controller.signal,
+      const processor = new AutoPaymentProcessor()
+      const result = await processor.processEmails()
+
+      console.log("[v0] Email scan completed:", result)
+
+      return NextResponse.json({
+        success: true,
+        result,
+        timestamp: new Date().toISOString(),
       })
-
-      clearTimeout(timeoutId)
-
-      const data = await response.json()
-      console.log("[v0] Cron response:", { status: response.status, data })
-
-      if (!response.ok) {
-        return NextResponse.json(
-          {
-            success: false,
-            error: data.error || "Email scan failed",
-            details: data,
-          },
-          { status: response.status },
-        )
-      }
-
-      return NextResponse.json({ success: true, result: data.result })
-    } catch (fetchError) {
-      clearTimeout(timeoutId)
-
-      if (fetchError instanceof Error && fetchError.name === "AbortError") {
-        console.error("[v0] Email scan timeout")
-        return NextResponse.json(
-          {
-            success: false,
-            error: "Email scan timed out",
-            hint: "The email scan is taking too long. Please check server logs.",
-          },
-          { status: 504 },
-        )
-      }
-
-      console.error("[v0] Fetch error:", fetchError)
+    } catch (processorError) {
+      console.error("[v0] Email processor error:", processorError)
       return NextResponse.json(
         {
           success: false,
-          error: "Failed to connect to email scan service",
-          details: fetchError instanceof Error ? fetchError.message : "Unknown error",
+          error: "Email scan failed",
+          details: processorError instanceof Error ? processorError.message : "Unknown error",
         },
         { status: 500 },
       )
