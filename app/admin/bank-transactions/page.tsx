@@ -12,73 +12,60 @@ export default async function BankTransactionsPage() {
   await requireAdminAuth()
   const supabase = await createClient()
 
-  console.log("[v0] Checking bank_transactions table...")
+  console.log("[v0] Fetching bank transactions...")
 
-  const { data: rawTransactions, error: rawError } = await supabase
-    .from("bank_transactions")
-    .select("*")
-    .order("created_at", { ascending: false })
-    .limit(100)
+  let transactions = null
+  let error = null
+  let usedFallback = false
 
-  console.log("[v0] Raw transactions query result:", {
-    count: rawTransactions?.length,
-    error: rawError,
-    sample: rawTransactions?.[0],
-  })
+  try {
+    // Try with JOIN using PostgREST foreign key syntax
+    const result = await supabase
+      .from("bank_transactions")
+      .select(`
+        *,
+        profiles!user_id (
+          id,
+          full_name,
+          email
+        ),
+        deposits!deposit_id (
+          id,
+          status
+        )
+      `)
+      .order("created_at", { ascending: false })
+      .limit(100)
 
-  const { data: transactions, error } = await supabase
-    .from("bank_transactions")
-    .select(`
-      *,
-      profiles:user_id (
-        id,
-        full_name,
-        email
-      ),
-      deposits:deposit_id (
-        id,
-        status
-      )
-    `)
-    .order("created_at", { ascending: false })
-    .limit(100)
-
-  if (error) {
-    console.error("[v0] Error fetching bank transactions:", error)
-    console.error("[v0] Error details:", {
-      message: error.message,
-      details: error.details,
-      hint: error.hint,
-      code: error.code,
-    })
-
-    // Check if it's a "table not found" error
-    if (error.message?.includes("relation") && error.message?.includes("does not exist")) {
-      return (
-        <div className="space-y-6">
-          <div>
-            <h1 className="text-3xl font-bold">Giao dịch ngân hàng</h1>
-            <p className="text-muted-foreground">Quản lý giao dịch tự động từ email ngân hàng</p>
-          </div>
-
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              Bảng <code>bank_transactions</code> chưa được tạo. Vui lòng chạy migration script{" "}
-              <code>206-create-bank-transactions.sql</code> từ thư mục scripts.
-            </AlertDescription>
-          </Alert>
-        </div>
-      )
+    if (result.error) {
+      console.warn("[v0] JOIN query failed:", result.error.message)
+      throw result.error
     }
 
-    if (error.message?.includes("column") || error.message?.includes("foreign key")) {
-      console.warn("[v0] JOIN failed, falling back to raw transactions")
-      console.log("[v0] Using raw transactions:", rawTransactions?.length)
+    transactions = result.data
+    console.log("[v0] Successfully fetched transactions with JOIN:", transactions?.length)
+  } catch (joinError: any) {
+    console.warn("[v0] Falling back to simple query without JOIN")
+    usedFallback = true
+
+    // Fallback to simple query without JOIN
+    const result = await supabase
+      .from("bank_transactions")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(100)
+
+    transactions = result.data
+    error = result.error
+
+    if (error) {
+      console.error("[v0] Even simple query failed:", error)
+    } else {
+      console.log("[v0] Successfully fetched raw transactions:", transactions?.length)
     }
   }
 
-  const finalTransactions = transactions || rawTransactions || []
+  const finalTransactions = transactions || []
 
   console.log("[v0] Final transactions to display:", {
     count: finalTransactions.length,
@@ -107,6 +94,16 @@ export default async function BankTransactionsPage() {
           <AlertDescription>
             Lỗi khi tải giao dịch: {error.message}
             {error.hint && <div className="mt-1 text-xs">Gợi ý: {error.hint}</div>}
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {usedFallback && !error && (
+        <Alert>
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Đang hiển thị dữ liệu giao dịch cơ bản. Để xem thông tin người dùng, vui lòng chạy script{" "}
+            <code>003_fix_foreign_key_constraints.sql</code> và khởi động lại ứng dụng.
           </AlertDescription>
         </Alert>
       )}
