@@ -104,8 +104,10 @@
 }
 
 @theme inline {
-  --font-sans: "Geist", "Geist Fallback";
-  --font-mono: "Geist Mono", "Geist Mono Fallback";
+  /* Using Be Vietnam Pro as primary font with Inter as fallback */
+  --font-sans: var(--font-be-vietnam-pro, "Be Vietnam Pro"), var(--font-inter, "Inter"), system-ui, -apple-system,
+    sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Code", "Roboto Mono", monospace;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -150,6 +152,10 @@
   }
   body {
     @apply bg-background text-foreground;
+    /* Improved text rendering for Vietnamese characters */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
 }
 
