@@ -122,6 +122,7 @@ export class BankEmailParser {
   static parse(emailFrom: string, emailText: string): BankTransaction | null {
     const actualEmail = this.extractEmailAddress(emailFrom)
     console.log("[v0] Extracted email address:", actualEmail)
+    console.log("[v0] Original email from:", emailFrom)
 
     const config = BANK_CONFIGS.find((c) => actualEmail.includes(c.fromEmail.toLowerCase()))
 
@@ -131,22 +132,28 @@ export class BankEmailParser {
         "[v0] Supported emails:",
         BANK_CONFIGS.map((c) => c.fromEmail),
       )
+      console.log("[v0] Checking each config:")
+      for (const c of BANK_CONFIGS) {
+        console.log(`[v0] - ${c.fromEmail.toLowerCase()} vs ${actualEmail}`)
+      }
       return null
     }
 
     try {
       console.log(`[v0] Parsing email from ${config.name}`)
-      console.log("[v0] Email text preview:", emailText.substring(0, 800))
+      console.log("[v0] Email text preview (first 1000 chars):", emailText.substring(0, 1000))
 
       // Extract amount first (required)
       const amountMatch = emailText.match(config.patterns.amount)
       if (!amountMatch) {
         console.log("[v0] Amount not found with pattern:", config.patterns.amount)
+        const allNumbers = emailText.match(/\d{3,}/g)
+        console.log("[v0] Numbers found in email:", allNumbers?.slice(0, 5))
         return null
       }
       const cleanAmount = amountMatch[1].replace(/[.,]/g, "")
       const amount = Number.parseFloat(cleanAmount)
-      console.log("[v0] Found amount:", amount)
+      console.log("[v0] Found amount:", amount, "from match:", amountMatch[0])
 
       // Extract content
       let content = ""

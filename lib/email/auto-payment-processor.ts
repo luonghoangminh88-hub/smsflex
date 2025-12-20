@@ -60,6 +60,7 @@ export class AutoPaymentProcessor {
           "Email credentials not configured. Please set EMAIL_USER and EMAIL_PASSWORD in environment variables."
         console.error(`[v0] ${errorMsg}`)
         result.errors.push(errorMsg)
+        result.errorCount++
         return result
       }
 
@@ -154,24 +155,17 @@ export class AutoPaymentProcessor {
         try {
           transaction = BankEmailParser.parse(email.from, emailText)
         } catch (parseError) {
-          console.error("[v0] Email parsing error:", parseError)
+          const errorMsg = `Parse error: ${parseError instanceof Error ? parseError.message : "Unknown error"}`
+          console.error("[v0] Email parsing error:", errorMsg)
+          console.error("[v0] Email preview:", emailText.substring(0, 500))
           result.errorCount++
-          result.errors.push(`Parse error: ${parseError instanceof Error ? parseError.message : "Unknown error"}`)
-          continue
-        }
-
-        if (!transaction) {
-          result.errorCount++
-          const errorMsg = `Failed to parse email from "${email.from}"`
-          console.error(`[v0] ${errorMsg}`)
           result.errors.push(errorMsg)
 
-          // Save parse error to DB
           try {
             await this.supabase.from("bank_transactions").insert({
-              transaction_id: `FAILED_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+              transaction_id: `PARSE_ERROR_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
               amount: 0,
-              content: email.subject || "No subject",
+              content: (email.subject || "No subject").substring(0, 500),
               sender_info: email.from,
               bank_name: "Unknown",
               email_subject: email.subject,
@@ -179,7 +173,35 @@ export class AutoPaymentProcessor {
               email_date: email.date,
               email_body: emailText.substring(0, 5000),
               status: "parse_failed",
-              error_message: "Failed to parse email content",
+              error_message: errorMsg,
+            })
+          } catch (dbError) {
+            console.error("[v0] Failed to save parse error to DB:", dbError)
+          }
+          continue
+        }
+
+        if (!transaction) {
+          result.errorCount++
+          const errorMsg = `Failed to parse email from "${email.from}". Subject: "${email.subject}"`
+          console.error(`[v0] ${errorMsg}`)
+          console.error("[v0] Email text preview for failed parse:", emailText.substring(0, 1000))
+          result.errors.push(errorMsg)
+
+          // Save parse error to DB
+          try {
+            await this.supabase.from("bank_transactions").insert({
+              transaction_id: `UNMATCHED_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+              amount: 0,
+              content: (email.subject || "No subject").substring(0, 500),
+              sender_info: email.from,
+              bank_name: "Unknown",
+              email_subject: email.subject,
+              email_from: email.from,
+              email_date: email.date,
+              email_body: emailText.substring(0, 5000),
+              status: "parse_failed",
+              error_message: "Failed to parse email content - no matching bank pattern",
             })
           } catch (dbError) {
             console.error("[v0] Failed to save parse error to DB:", dbError)
