@@ -559,6 +559,8 @@ export class AutoPaymentProcessor {
         .insert({
           user_id: matchingProfile.id,
           amount: amount,
+          total_amount: amount,
+          fee_amount: 0,
           payment_method: "bank_transfer",
           payment_code: content.match(/NAPTEN[A-Z0-9]{12,}/i)?.[0] || `AUTO_${Date.now()}`,
           status: "pending",
