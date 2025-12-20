@@ -389,13 +389,18 @@ export class AutoPaymentProcessor {
     userId: string,
   ): Promise<{ success: boolean; error?: string }> {
     try {
+      console.log(`[v0] 🔄 Starting completeDeposit for deposit ${depositId}, user ${userId}`)
+
       const { data: deposit } = await this.supabase.from("deposits").select("amount").eq("id", depositId).single()
 
       if (!deposit) {
+        console.error(`[v0] ❌ Deposit ${depositId} not found`)
         return { success: false, error: "Deposit not found" }
       }
 
-      const { error: balanceError } = await this.supabase.rpc("atomic_balance_update", {
+      console.log(`[v0] 💰 Processing deposit amount: ${deposit.amount}`)
+
+      const { data: balanceResult, error: balanceError } = await this.supabase.rpc("update_balance_atomic", {
         p_user_id: userId,
         p_amount: deposit.amount,
         p_transaction_type: "deposit",
@@ -404,9 +409,11 @@ export class AutoPaymentProcessor {
       })
 
       if (balanceError) {
-        console.error("[v0] Balance update error:", balanceError)
+        console.error("[v0] ❌ Balance update error:", balanceError)
         return { success: false, error: balanceError.message }
       }
+
+      console.log(`[v0] ✅ Balance updated successfully:`, balanceResult)
 
       const { error: depositError } = await this.supabase
         .from("deposits")
@@ -417,9 +424,11 @@ export class AutoPaymentProcessor {
         .eq("id", depositId)
 
       if (depositError) {
-        console.error("[v0] Deposit update error:", depositError)
+        console.error("[v0] ❌ Deposit update error:", depositError)
         return { success: false, error: depositError.message }
       }
+
+      console.log(`[v0] ✅ Deposit status updated to completed`)
 
       await this.supabase
         .from("bank_transactions")
@@ -431,6 +440,8 @@ export class AutoPaymentProcessor {
         })
         .eq("id", bankTxId)
 
+      console.log(`[v0] ✅ Bank transaction status updated to success`)
+
       await this.supabase.from("notifications").insert({
         user_id: userId,
         type: "deposit_approved",
@@ -440,10 +451,11 @@ export class AutoPaymentProcessor {
         is_read: false,
       })
 
-      console.log(`[v0] Successfully completed deposit ${depositId} for user ${userId}`)
+      console.log(`[v0] ✅ Notification sent to user`)
+      console.log(`[v0] 🎉 Successfully completed deposit ${depositId} for user ${userId}`)
       return { success: true }
     } catch (error) {
-      console.error("[v0] Error completing deposit:", error)
+      console.error("[v0] ❌ Error completing deposit:", error)
       return {
         success: false,
         error: error instanceof Error ? error.message : "Unknown error",
