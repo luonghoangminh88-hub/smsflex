@@ -118,10 +118,17 @@ export class ImapClient {
                     return
                   }
 
+                  const emailDate = parsed.date || new Date()
+                  console.log(`[v0] Email date from header: ${emailDate.toISOString()}`)
+                  console.log(`[v0] Email date timezone offset: ${emailDate.getTimezoneOffset()} minutes`)
+                  console.log(
+                    `[v0] Email date local string: ${emailDate.toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" })}`,
+                  )
+
                   emails.push({
                     subject: parsed.subject || "",
                     from: parsed.from?.text || "",
-                    date: parsed.date || new Date(),
+                    date: emailDate,
                     html: parsed.html || undefined,
                     text: parsed.text || undefined,
                   })

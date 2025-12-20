@@ -23,18 +23,10 @@ const BANK_CONFIGS: BankParserConfig[] = [
     name: "Vietcombank",
     fromEmail: "VCBDigibank@info.vietcombank.com.vn",
     patterns: {
-      // Bắt được: "Mã giao dịch", "Mã GD", "Ma giao dich", "Ma GD", "GD", "Transaction ID"
-      // VD: "Mã giao dịch: FT23123456789" hoặc "Ma GD: ABC123" hoặc "GD: 12345"
       transactionId: /(?:M[aã]\s*(?:giao\s*d[ịi]ch|GD)|GD|Transaction\s*ID|Ref(?:erence)?)[:\s]*([A-Z0-9]+)/i,
-
-      // Bắt được nhiều format số tiền: "+1,000,000 VND", "1.000.000 VND", "+1000000", "So tien: 1.000.000"
       amount: /(?:S[oố]\s*ti[eề]n[:\s]*)?[+]?\s*([\d,.]+)\s*(?:VND|đ|d)?/i,
-
-      // Bắt được: "Nội dung", "Noi dung", "ND", "Content", "Mo ta", "Dien giai"
       content:
         /(?:N[oô]i\s*dung(?:\s*(?:CK|chuy[eển]n\s*kho[aả]n))?|ND|Content|M[ôo]\s*t[ảa]|Di[eễ]n\s*gi[aả]i)[:\s]*(.+?)(?:\n|$|<br|;)/i,
-
-      // Bắt được: "Từ", "Tu", "Người chuyển", "Nguoi chuyen", "From"
       sender: /(?:T[uừ](?:\s*TK)?|Ng[ưu][oờ]i\s*chuy[eển]n|From)[:\s]*(.+?)(?:\n|$|<br|;)/i,
     },
   },
@@ -42,17 +34,10 @@ const BANK_CONFIGS: BankParserConfig[] = [
     name: "MB Bank",
     fromEmail: "mbebanking@mbbank.com.vn",
     patterns: {
-      // MB Bank format: "Ref: MB123456789", "Mã giao dịch: 987654321", "Transaction ID: XXX"
       transactionId: /(?:Ref(?:erence)?|M[aã]\s*(?:giao\s*d[ịi]ch|GD)|Transaction\s*ID|GD)[:\s]*([A-Z0-9]+)/i,
-
-      // MB Bank number format
       amount: /(?:S[oố]\s*ti[eề]n[:\s]*)?[+]?\s*([\d,.]+)\s*(?:VND|đ|d)?/i,
-
-      // MB Bank content variations
       content:
         /(?:N[oô]i\s*dung(?:\s*(?:CK|chuy[eển]n\s*kho[aả]n))?|ND|M[ôo]\s*t[ảa]|Description|Content)[:\s]*(.+?)(?:\n|$|<br|;)/i,
-
-      // MB Bank sender info
       sender: /(?:TK\s*g[ửu]i|T[uừ](?:\s*TK)?|From|Ng[ưu][oờ]i\s*g[ửu]i)[:\s]*(.+?)(?:\n|$|<br|;)/i,
     },
   },
@@ -60,30 +45,27 @@ const BANK_CONFIGS: BankParserConfig[] = [
     name: "ACB",
     fromEmail: "acb-notification@acb.com.vn",
     patterns: {
-      // ACB format: "Trace: ACB123456", "Mã tham chiếu: 123456789"
       transactionId: /(?:Trace|M[aã]\s*tham\s*chi[eế]u|Reference|M[aã]\s*GD|GD)[:\s]*([A-Z0-9]+)/i,
-
-      // ACB number format
       amount: /[+]?\s*([\d,.]+)\s*(?:VND|đ|d)?/i,
-
-      // ACB content
       content: /(?:N[oô]i\s*dung|Di[eễ]n\s*gi[aả]i|Description|Content|M[ôo]\s*t[ảa])[:\s]*(.+?)(?:\n|$|<br|;)/i,
-
-      // ACB sender
       sender: /(?:Ng[ưu][oờ]i\s*(?:chuy[eển]n|g[ửu]i)|T[uừ]|From)[:\s]*(.+?)(?:\n|$|<br|;)/i,
     },
   },
   {
     name: "Timo",
-    fromEmail: "timo", // Match both support@timo.vn and any @timo or timo-related emails
+    fromEmail: "timo",
     patterns: {
-      transactionId: /(?:MBVCB\.\d+\.[A-Z0-9]+\.[A-Z0-9]+|NAPTEN[A-Z0-9]+)/i,
+      // Match full MBVCB code like: MBVCB.12225147306.5354BFTVG2RR99AD.NAPTEND43E5D4201371170
+      transactionId: /MBVCB\.\d+(?:\.[A-Z0-9]+)+|NAPTEN[A-Z0-9]+/i,
 
-      amount: /(?:t[aă]ng|nh[aậ]n(?:\s+đ[ưu][oợ]c)?|chuy[eển]n|gi[aả]m|c[oộ]ng)\s+([0-9]{1,3}(?:[.,][0-9]{3})*)\s*VND/i,
+      // Match amount like "tăng 10.000 VND" - fixed to capture numbers with dots/commas
+      amount: /(?:t[aă]ng|nh[aậ]n|chuy[eển]n|gi[aả]m|c[oộ]ng)\s+([\d.,]+)\s*VND/i,
 
-      content: /(?:M[ôo]\s*t[aả]|N[oô]i\s*dung)[:\s]*(.+?)(?=(?:C[aả]m\s*[oơ]n|Tr[aâ]n\s*tr[oọ]ng|Email|$))/is,
+      // Match content from "Mô tả:" until "Cảm ơn" or "Trân trọng"
+      content: /M[ôo]\s*t[aả][:\s]*(.+?)(?=C[aả]m\s*[oơ]n|Tr[aâ]n\s*tr[oọ]ng|$)/is,
 
-      sender: /CT\s+tu\s+(\d+)\s+([A-Z\s]+?)(?=\s+toi)/i,
+      // Match sender like "CT tu 1055116973 LUONG VAN HOC"
+      sender: /CT\s+tu\s+(\d+)\s+([A-Z\s]+?)(?=\s+toi|\s+tai|$)/i,
     },
   },
   {
@@ -120,6 +102,7 @@ export class BankEmailParser {
 
   static parse(emailFrom: string, emailText: string): BankTransaction | null {
     const actualEmail = this.extractEmailAddress(emailFrom)
+    console.log("[v0] ===== Starting Bank Email Parse =====")
     console.log("[v0] Extracted email address:", actualEmail)
     console.log("[v0] Original email from:", emailFrom)
 
@@ -130,85 +113,94 @@ export class BankEmailParser {
     })
 
     if (!config) {
-      console.log("[v0] No parser config found for:", actualEmail)
+      console.log("[v0] ❌ No parser config found for:", actualEmail)
       console.log(
         "[v0] Supported emails:",
         BANK_CONFIGS.map((c) => c.fromEmail),
       )
-      console.log("[v0] Checking each config:")
-      for (const c of BANK_CONFIGS) {
-        console.log(`[v0] - ${c.fromEmail.toLowerCase()} vs ${actualEmail}`)
-      }
       return null
     }
 
     try {
-      console.log(`[v0] Parsing email from ${config.name}`)
+      console.log(`[v0] ✅ Using parser for: ${config.name}`)
+      console.log("[v0] Email text length:", emailText.length)
       console.log("[v0] Email text preview (first 1000 chars):", emailText.substring(0, 1000))
 
-      // Extract amount first (required)
       const amountMatch = emailText.match(config.patterns.amount)
       if (!amountMatch) {
-        console.log("[v0] Amount not found with pattern:", config.patterns.amount)
+        console.log("[v0] ❌ Amount not found with pattern:", config.patterns.amount.toString())
+        console.log("[v0] Searching for common amount patterns in text...")
         const allNumbers = emailText.match(/\d{3,}/g)
-        console.log("[v0] Numbers found in email:", allNumbers?.slice(0, 5))
+        console.log("[v0] All numbers found (first 10):", allNumbers?.slice(0, 10))
         return null
       }
+
+      // Remove dots and commas, parse as integer
       const cleanAmount = amountMatch[1].replace(/[.,]/g, "")
       const amount = Number.parseFloat(cleanAmount)
-      console.log("[v0] Found amount:", amount, "from match:", amountMatch[0])
+      console.log("[v0] ✅ Found amount:", amount, "VND (from match:", amountMatch[0], ")")
 
-      // Extract content
       let content = ""
-      const moTaMatch = emailText.match(/M[ôo]\s*t[aả][:\s]*(.+?)(?:C[aả]m\s*[oơ]n|Tr[aâ]n\s*tr[oọ]ng|$)/is)
-      if (moTaMatch) {
-        content = moTaMatch[1].trim()
-        console.log("[v0] Found full content from Mô tả:", content)
+
+      // Strategy 1: Try to extract from "Mô tả:" section
+      const moTaMatch = emailText.match(/M[ôo]\s*t[aả][:\s]*(.+?)(?=C[aả]m\s*[oơ]n|Tr[aâ]n\s*tr[oọ]ng|$)/is)
+      if (moTaMatch && moTaMatch[1]) {
+        content = moTaMatch[1].trim().replace(/\s+/g, " ")
+        console.log("[v0] ✅ Found content from 'Mô tả' section:", content.substring(0, 200))
       }
 
+      // Strategy 2: Try to find NAPTEN code specifically
       if (!content) {
         const naptenMatch = emailText.match(/NAPTEN[A-Z0-9]+/i)
         if (naptenMatch) {
           content = naptenMatch[0]
-          console.log("[v0] Found NAPTEN code:", content)
+          console.log("[v0] ✅ Found NAPTEN code as content:", content)
+        }
+      }
+
+      // Strategy 3: Use config pattern
+      if (!content) {
+        const contentMatch = emailText.match(config.patterns.content)
+        if (contentMatch) {
+          content = (contentMatch[1] || contentMatch[0]).trim()
+          console.log("[v0] ✅ Found content from config pattern:", content.substring(0, 200))
         }
       }
 
       if (!content) {
-        const contentMatch = emailText.match(config.patterns.content)
-        if (contentMatch) {
-          content = contentMatch[1]?.trim() || contentMatch[0]?.trim()
-          console.log("[v0] Found content from pattern:", content)
-        }
+        console.log("[v0] ⚠️ No content found, using fallback")
+        content = `No content - ${config.name} transaction`
       }
 
-      // Extract transaction ID from content or email body
       let transactionId = ""
+
+      // Try full MBVCB format first
       const fullMbvcbMatch = emailText.match(/MBVCB\.\d+\.[A-Z0-9]+\.[A-Z0-9]+\.[A-Z0-9]+/i)
       if (fullMbvcbMatch) {
         transactionId = fullMbvcbMatch[0]
-        console.log("[v0] Found full MBVCB transaction ID:", transactionId)
+        console.log("[v0] ✅ Found full MBVCB transaction ID:", transactionId)
       } else {
         // Try shorter MBVCB format
         const mbvcbMatch = emailText.match(/MBVCB\.\d+\.[A-Z0-9]+/i)
         if (mbvcbMatch) {
           transactionId = mbvcbMatch[0]
-          console.log("[v0] Found MBVCB transaction ID:", transactionId)
+          console.log("[v0] ✅ Found MBVCB transaction ID:", transactionId)
         } else {
           // Try NAPTEN code
           const naptenMatch = emailText.match(/NAPTEN[A-Z0-9]+/i)
           if (naptenMatch) {
             transactionId = naptenMatch[0]
-            console.log("[v0] Found NAPTEN transaction ID:", transactionId)
+            console.log("[v0] ✅ Found NAPTEN transaction ID:", transactionId)
           } else {
-            // Last resort - try config pattern
+            // Use config pattern
             const transactionIdMatch = emailText.match(config.patterns.transactionId)
             if (transactionIdMatch) {
-              transactionId = transactionIdMatch[0].trim()
-              console.log("[v0] Found transaction ID from pattern:", transactionId)
+              transactionId = (transactionIdMatch[1] || transactionIdMatch[0]).trim()
+              console.log("[v0] ✅ Found transaction ID from config pattern:", transactionId)
             } else {
-              console.log("[v0] Transaction ID not found, generating fallback ID")
-              transactionId = `${config.name.toUpperCase()}-${Date.now()}-${amount}`
+              // Generate fallback ID
+              transactionId = `${config.name.toUpperCase()}_${Date.now()}_${amount}`
+              console.log("[v0] ⚠️ No transaction ID found, generated fallback:", transactionId)
             }
           }
         }
@@ -219,18 +211,20 @@ export class BankEmailParser {
       if (config.patterns.sender) {
         const senderMatch = emailText.match(config.patterns.sender)
         if (senderMatch) {
-          senderInfo = senderMatch[1].trim() + " " + senderMatch[2].trim()
-          console.log("[v0] Found sender:", senderInfo)
+          senderInfo = senderMatch.slice(1).join(" ").trim()
+          console.log("[v0] ✅ Found sender info:", senderInfo)
         }
       }
 
       // Try to extract user ID from content
       const userId = this.extractUserId(content)
       if (userId) {
-        console.log("[v0] Extracted user ID:", userId)
+        console.log("[v0] ✅ Extracted user ID from content:", userId)
+      } else {
+        console.log("[v0] ⚠️ No user ID found in content")
       }
 
-      return {
+      const transaction = {
         transactionId,
         amount,
         content,
@@ -238,7 +232,13 @@ export class BankEmailParser {
         bankName: config.name,
         userId,
       }
+
+      console.log("[v0] ===== Parse Complete - SUCCESS =====")
+      console.log("[v0] Transaction summary:", JSON.stringify(transaction, null, 2))
+
+      return transaction
     } catch (error) {
+      console.error("[v0] ===== Parse Complete - ERROR =====")
       console.error("[v0] Error parsing bank email:", error)
       return null
     }
@@ -246,27 +246,23 @@ export class BankEmailParser {
 
   private static extractUserId(content: string): string | undefined {
     const patterns = [
-      /NAPTEN([A-Z0-9]{10,})/i, // Match full NAPTEN code (e.g., NAPTEND43E5D4201371170)
-      /NAPTEN[A-Z]?([A-Z0-9]{8,})/i, // Match NAPTEN with single letter variant
-      /NAPTEND([A-Z0-9]+)/i, // Match NAPTEND variant
-      /NAPTEN([A-Z0-9]+)/i, // Match entire NAPTEN code
-      /NAP\s*TEN\s*([A-Z0-9]+)/i, // Match with spaces
+      /NAPTEN([A-Z0-9]+)/i,
+      /NAP\s*TEN\s*([A-Z0-9]+)/i,
       /NAP\s*(\d+)/i,
       /DEPOSIT\s*(\d+)/i,
       /ID\s*(\d+)/i,
       /USER\s*(\d+)/i,
-      /TEN[A-Z]?(\d+)/i, // Last part of payment code
     ]
 
     for (const pattern of patterns) {
       const match = content.match(pattern)
-      if (match) {
-        console.log(`[v0] Extracted user ID "${match[1]}" using pattern: ${pattern}`)
+      if (match && match[1]) {
+        console.log(`[v0] Extracted user ID "${match[1]}" using pattern: ${pattern.toString()}`)
         return match[1]
       }
     }
 
-    console.log("[v0] No user ID found in content:", content)
+    console.log("[v0] No user ID pattern matched in content:", content.substring(0, 100))
     return undefined
   }
 }

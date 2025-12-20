@@ -49,6 +49,23 @@ export class AutoPaymentProcessor {
     }
   }
 
+  private toVietnamTime(date: Date | string): string {
+    const d = typeof date === "string" ? new Date(date) : date
+
+    // Convert to Vietnam timezone (UTC+7)
+    // Get UTC time and add 7 hours
+    const vietnamOffset = 7 * 60 // 7 hours in minutes
+    const localOffset = d.getTimezoneOffset() // Current timezone offset in minutes
+    const totalOffset = vietnamOffset + localOffset
+
+    const vietnamTime = new Date(d.getTime() + totalOffset * 60 * 1000)
+
+    console.log("[v0] Original date:", d.toISOString())
+    console.log("[v0] Vietnam time:", vietnamTime.toISOString())
+
+    return vietnamTime.toISOString()
+  }
+
   async processEmails(): Promise<ProcessingResult> {
     console.log("[v0] Starting auto-payment email processing...")
 
@@ -181,7 +198,7 @@ export class AutoPaymentProcessor {
               bank_name: "Unknown",
               email_subject: email.subject,
               email_from: email.from,
-              email_date: email.date,
+              email_date: this.toVietnamTime(email.date), // Convert email date to Vietnam timezone before storing
               email_body: emailText.substring(0, 5000),
               status: "parse_failed",
               error_message: errorMsg,
@@ -209,7 +226,7 @@ export class AutoPaymentProcessor {
               bank_name: "Unknown",
               email_subject: email.subject,
               email_from: email.from,
-              email_date: email.date,
+              email_date: this.toVietnamTime(email.date), // Convert email date to Vietnam timezone before storing
               email_body: emailText.substring(0, 5000),
               status: "parse_failed",
               error_message: "Failed to parse email content - no matching bank pattern",
@@ -246,7 +263,7 @@ export class AutoPaymentProcessor {
               bank_name: transaction.bankName,
               email_subject: email.subject,
               email_from: email.from,
-              email_date: email.date,
+              email_date: this.toVietnamTime(email.date), // Convert email date to Vietnam timezone before storing
               status: "pending",
             })
             .select()
@@ -348,7 +365,7 @@ export class AutoPaymentProcessor {
         .from("deposits")
         .update({
           status: "completed",
-          updated_at: new Date().toISOString(),
+          updated_at: this.toVietnamTime(new Date()),
         })
         .eq("id", depositId)
 
@@ -363,7 +380,7 @@ export class AutoPaymentProcessor {
           status: "success",
           user_id: userId,
           deposit_id: depositId,
-          processed_at: new Date().toISOString(),
+          processed_at: this.toVietnamTime(new Date()),
         })
         .eq("id", bankTxId)
 
