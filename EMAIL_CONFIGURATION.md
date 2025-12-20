@@ -17,14 +17,14 @@ Hiện tại hệ thống OTP Rental đang sử dụng email mặc định của
 Chọn 1 trong các email service providers sau:
 
 #### Option 1: SendGrid (Khuyến nghị)
-```
+\`\`\`
 SMTP Host: smtp.sendgrid.net
 SMTP Port: 587
 SMTP Username: apikey
 SMTP Password: [Your SendGrid API Key]
 Sender Email: noreply@yourdomain.com
 Sender Name: OTP Rental
-```
+\`\`\`
 
 **Lấy SendGrid API Key:**
 1. Đăng ký tại [https://sendgrid.com](https://sendgrid.com)
@@ -32,14 +32,14 @@ Sender Name: OTP Rental
 3. Chọn **Full Access** và tạo key
 
 #### Option 2: Resend (Developer-friendly)
-```
+\`\`\`
 SMTP Host: smtp.resend.com
 SMTP Port: 587
 SMTP Username: resend
 SMTP Password: [Your Resend API Key]
 Sender Email: noreply@yourdomain.com
 Sender Name: OTP Rental
-```
+\`\`\`
 
 **Lấy Resend API Key:**
 1. Đăng ký tại [https://resend.com](https://resend.com)
@@ -47,14 +47,14 @@ Sender Name: OTP Rental
 3. Copy API key
 
 #### Option 3: AWS SES (Scalable, rẻ)
-```
+\`\`\`
 SMTP Host: email-smtp.[region].amazonaws.com
 SMTP Port: 587
 SMTP Username: [Your SES SMTP Username]
 SMTP Password: [Your SES SMTP Password]
 Sender Email: noreply@yourdomain.com
 Sender Name: OTP Rental
-```
+\`\`\`
 
 ---
 
@@ -70,7 +70,7 @@ Supabase cung cấp sẵn templates cho:
 
 #### Ví dụ Confirmation Email Template:
 
-```html
+\`\`\`html
 <html>
 <body style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px;">
   <div style="max-width: 600px; margin: 0 auto; background-color: white; border-radius: 8px; padding: 30px;">
@@ -106,7 +106,7 @@ Supabase cung cấp sẵn templates cho:
   </div>
 </body>
 </html>
-```
+\`\`\`
 
 ---
 
@@ -117,24 +117,24 @@ Supabase cung cấp sẵn templates cho:
 ### Cài đặt (chọn 1):
 
 #### Option 1: Resend (Khuyến nghị cho Next.js)
-```bash
+\`\`\`bash
 npm install resend
-```
+\`\`\`
 
 **Thêm env var:**
-```
+\`\`\`
 RESEND_API_KEY=re_xxxxxxxxxxxx
-```
+\`\`\`
 
 #### Option 2: SendGrid
-```bash
+\`\`\`bash
 npm install @sendgrid/mail
-```
+\`\`\`
 
 **Thêm env var:**
-```
+\`\`\`
 SENDGRID_API_KEY=SG.xxxxxxxxxxxx
-```
+\`\`\`
 
 ---
 
@@ -142,7 +142,7 @@ SENDGRID_API_KEY=SG.xxxxxxxxxxxx
 
 ### Tạo Email Service
 
-```typescript
+\`\`\`typescript
 // lib/email-service.ts
 import { Resend } from 'resend'
 
@@ -181,11 +181,11 @@ export async function sendRentalSuccessEmail(
     `,
   })
 }
-```
+\`\`\`
 
 ### Gọi trong API Routes
 
-```typescript
+\`\`\`typescript
 // app/api/deposits/verify/route.ts
 import { sendDepositConfirmationEmail } from '@/lib/email-service'
 
@@ -204,7 +204,7 @@ await supabase.rpc('create_notification', {
   p_type: 'deposit',
   p_metadata: { payment_code: deposit.payment_code }
 })
-```
+\`\`\`
 
 ---
 
@@ -232,7 +232,7 @@ await supabase.rpc('create_notification', {
 
 Test email trong development:
 
-```typescript
+\`\`\`typescript
 // Test script
 const testEmail = async () => {
   await sendDepositConfirmationEmail(
@@ -242,7 +242,7 @@ const testEmail = async () => {
   )
   console.log('Email sent!')
 }
-```
+\`\`\`
 
 ---
 

@@ -32,9 +32,9 @@ Hệ thống thuê số điện thoại ảo nhận OTP chuyên nghiệp, hỗ t
 
 Copy `.env.example` to `.env.local` và điền đầy đủ:
 
-```bash
+\`\`\`bash
 cp .env.example .env.local
-```
+\`\`\`
 
 **Biến bắt buộc:**
 - `SMS_ACTIVATE_API_KEY`: Đăng ký tại https://sms-activate.org
@@ -45,10 +45,10 @@ cp .env.example .env.local
 
 Chạy các migration scripts theo thứ tự trong folder `scripts/`:
 
-```bash
+\`\`\`bash
 # Connect to Supabase project and run SQL scripts
 # hoặc sử dụng v0 để execute scripts
-```
+\`\`\`
 
 **Thứ tự chạy:**
 1. `001_create_profiles_and_users.sql`
@@ -77,21 +77,21 @@ Truy cập `/setup-admin` và sử dụng `ADMIN_SETUP_SECRET` để tạo admin
 
 Cập nhật thông tin ngân hàng thật trong bảng `payment_methods`:
 
-```sql
+\`\`\`sql
 UPDATE payment_methods 
 SET 
   bank_code = 'YOUR_BANK_CODE',
   account_number = 'YOUR_ACCOUNT_NUMBER',
   account_name = 'YOUR_ACCOUNT_NAME'
 WHERE provider = 'vietqr';
-```
+\`\`\`
 
 ### 7. Run Development
 
-```bash
+\`\`\`bash
 npm install
 npm run dev
-```
+\`\`\`
 
 ### 8. Deploy to Production
 
@@ -152,4 +152,4 @@ For issues or questions, contact: support@otprental.com
 ## License
 
 Proprietary - All rights reserved
-```
+\`\`\`
