@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic"
 export const revalidate = 0
 
 import { requireAdminAuth } from "@/lib/auth/admin-check"
-import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/server"
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { BankTransactionsClient } from "@/components/bank-transactions-client"
 import { Alert, AlertDescription } from "@/components/ui/alert"
@@ -10,7 +10,7 @@ import { AlertCircle } from "lucide-react"
 
 export default async function BankTransactionsPage() {
   await requireAdminAuth()
-  const supabase = await createClient()
+  const supabase = await createAdminClient()
 
   console.log("[v0] Fetching bank transactions...")
 

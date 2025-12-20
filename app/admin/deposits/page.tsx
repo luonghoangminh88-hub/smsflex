@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/server"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { DepositVerificationActions } from "@/components/admin/deposit-verification-actions"
@@ -8,7 +8,7 @@ import { Clock, CheckCircle2, XCircle, AlertCircle } from "lucide-react"
 export const dynamic = "force-dynamic"
 
 export default async function AdminDepositsPage() {
-  const supabase = await createClient()
+  const supabase = await createAdminClient()
 
   // Get all deposits with user and payment method info
   const { data: deposits } = await supabase
