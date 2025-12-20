@@ -75,16 +75,15 @@ const BANK_CONFIGS: BankParserConfig[] = [
   },
   {
     name: "Timo",
-    fromEmail: "support@timo.vn",
+    fromEmail: "timo", // Match both support@timo.vn and any @timo or timo-related emails
     patterns: {
-      // Timo format: "Mã lệnh: BVCVCB-12207614650" with hyphens and mixed case
-      transactionId: /(?:[A-Z0-9]{16}|[\dA-Z]{12,20})/i,
+      transactionId: /(?:MBVCB[.\d]+|[A-Z0-9]{16}|[\dA-Z]{12,20})/i,
 
-      amount: /(?:v[uừ]a\s*)?(?:t[aă]ng|nh[aậ]n|chuy[eể]n)?\s*([0-9,.]+)\s*VND/i,
+      amount: /(?:v[uừ]a\s*)?(?:t[aă]ng|nh[aậ]n|chuy[eể]n|gi[aả]m)?\s*([0-9,.]+)\s*VND/i,
 
       content: /(?:M[ôo]\s*t[aả]|N[oô]i\s*dung)[:\s]*(.+?)(?=(?:C[aả]m\s*[oơ]n|Tr[aâ]n\s*tr[oọ]ng|$))/is,
 
-      sender: /(?:T[uừ]|From|Ng[ưu][oờ]i\s*g[ửu]i)[:\s]*(.+?)(?:\n|$|<br)/i,
+      sender: /(?:T[uừ]|From|Ng[ưu][oờ]i\s*g[ửu]i|CT\s*tu)\s*(\d+)\s*([A-Z\s]+)/i,
     },
   },
   {
@@ -124,7 +123,11 @@ export class BankEmailParser {
     console.log("[v0] Extracted email address:", actualEmail)
     console.log("[v0] Original email from:", emailFrom)
 
-    const config = BANK_CONFIGS.find((c) => actualEmail.includes(c.fromEmail.toLowerCase()))
+    const config = BANK_CONFIGS.find((c) => {
+      const configEmail = c.fromEmail.toLowerCase()
+      const fromEmail = actualEmail.toLowerCase()
+      return fromEmail.includes(configEmail) || configEmail.includes(fromEmail)
+    })
 
     if (!config) {
       console.log("[v0] No parser config found for:", actualEmail)
@@ -157,10 +160,10 @@ export class BankEmailParser {
 
       // Extract content
       let content = ""
-      const naptenMatch = emailText.match(/NAPTENF\d+/i)
+      const naptenMatch = emailText.match(/NAPTEN[A-Z0-9]+/i)
       if (naptenMatch) {
         content = naptenMatch[0]
-        console.log("[v0] Found NAPTENF code:", content)
+        console.log("[v0] Found NAPTEN code:", content)
       } else {
         const contentMatch = emailText.match(config.patterns.content)
         if (contentMatch) {
@@ -171,13 +174,19 @@ export class BankEmailParser {
 
       // Extract transaction ID from content or email body
       let transactionId = ""
-      const transactionIdMatch = emailText.match(config.patterns.transactionId)
-      if (transactionIdMatch) {
-        transactionId = transactionIdMatch[0].trim()
-        console.log("[v0] Found transaction ID:", transactionId)
+      const mbvcbMatch = emailText.match(/MBVCB\.\d+/i)
+      if (mbvcbMatch) {
+        transactionId = mbvcbMatch[0]
+        console.log("[v0] Found MBVCB transaction ID:", transactionId)
       } else {
-        console.log("[v0] Transaction ID not found, generating fallback ID")
-        transactionId = `TIMO-${Date.now()}-${amount}`
+        const transactionIdMatch = emailText.match(config.patterns.transactionId)
+        if (transactionIdMatch) {
+          transactionId = transactionIdMatch[0].trim()
+          console.log("[v0] Found transaction ID:", transactionId)
+        } else {
+          console.log("[v0] Transaction ID not found, generating fallback ID")
+          transactionId = `${config.name.toUpperCase()}-${Date.now()}-${amount}`
+        }
       }
 
       // Extract sender info (optional)
@@ -185,7 +194,7 @@ export class BankEmailParser {
       if (config.patterns.sender) {
         const senderMatch = emailText.match(config.patterns.sender)
         if (senderMatch) {
-          senderInfo = senderMatch[1].trim()
+          senderInfo = senderMatch[1].trim() + " " + senderMatch[2].trim()
           console.log("[v0] Found sender:", senderInfo)
         }
       }
@@ -212,12 +221,12 @@ export class BankEmailParser {
 
   private static extractUserId(content: string): string | undefined {
     const patterns = [
-      /NAPTENF(\d+)/i, // Full payment_code: NAPTENF123250174617584
+      /NAPTEN[A-Z]?(\d+)/i, // Match NAPTEN or NAPTENF followed by numbers
       /NAP\s*(\d+)/i,
       /DEPOSIT\s*(\d+)/i,
       /ID\s*(\d+)/i,
       /USER\s*(\d+)/i,
-      /TENF(\d+)/i, // Last part of payment code
+      /TEN[A-Z]?(\d+)/i, // Last part of payment code
     ]
 
     for (const pattern of patterns) {
