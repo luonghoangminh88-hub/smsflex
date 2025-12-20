@@ -33,12 +33,14 @@ export interface Deposit {
 
 /**
  * Generate unique payment code for user
- * Format: NAPTEN[Full_UserID_Without_Hyphens]
+ * Format: NAPTEN[First_8_Chars_UserID][Random_4_Chars]
  */
 export function generatePaymentCode(userId: string): string {
-  // This ensures the extracted user_id from bank emails matches the deposits table
+  // Use first 8 chars of UUID + 4 random chars for uniqueness
   const cleanUserId = userId.replace(/-/g, "").toUpperCase()
-  return `NAPTEN${cleanUserId}`
+  const userIdShort = cleanUserId.substring(0, 8)
+  const randomSuffix = Math.random().toString(36).substring(2, 6).toUpperCase()
+  return `NAPTEN${userIdShort}${randomSuffix}`
 }
 
 /**
