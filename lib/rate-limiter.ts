@@ -1,4 +1,4 @@
-import { createAdminClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 
 export interface RateLimitConfig {
   max: number // Số lượng yêu cầu tối đa
@@ -32,7 +32,7 @@ export async function checkRateLimit(
   const windowStart = now - config.windowMs
 
   try {
-    const supabase = await createAdminClient()
+    const supabase = createAdminClient()
 
     const { data: requests } = await supabase
       .from("rate_limit_logs")
@@ -93,7 +93,7 @@ export async function applyRateLimit(identifier: string, action: keyof typeof DE
 
 export async function clearRateLimit(identifier: string, action: string): Promise<void> {
   try {
-    const supabase = await createAdminClient()
+    const supabase = createAdminClient()
 
     await supabase.from("rate_limit_logs").delete().eq("identifier", String(identifier)).eq("action", action)
   } catch (error) {

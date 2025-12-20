@@ -11,6 +11,9 @@ export function createAdminClient() {
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
   if (!supabaseUrl || !supabaseServiceKey) {
+    console.error("[v0] Missing Supabase environment variables:")
+    console.error("[v0] NEXT_PUBLIC_SUPABASE_URL:", supabaseUrl ? "✓ Set" : "✗ Missing")
+    console.error("[v0] SUPABASE_SERVICE_ROLE_KEY:", supabaseServiceKey ? "✓ Set" : "✗ Missing")
     throw new Error("Missing Supabase environment variables for admin client")
   }
 
@@ -18,6 +21,11 @@ export function createAdminClient() {
     auth: {
       autoRefreshToken: false,
       persistSession: false,
+    },
+    global: {
+      headers: {
+        apikey: supabaseServiceKey,
+      },
     },
   })
 }

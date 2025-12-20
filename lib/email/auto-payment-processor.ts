@@ -30,8 +30,19 @@ export class AutoPaymentProcessor {
     }
 
     try {
-      this.supabase = createClient(supabaseUrl, supabaseKey)
+      this.supabase = createClient(supabaseUrl, supabaseKey, {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false,
+        },
+        global: {
+          headers: {
+            apikey: supabaseKey,
+          },
+        },
+      })
       console.log("[v0] AutoPaymentProcessor initialized with Supabase client")
+      console.log("[v0] Supabase URL:", supabaseUrl)
     } catch (error) {
       console.error("[v0] Failed to create Supabase client:", error)
       throw new Error(`Failed to initialize Supabase: ${error instanceof Error ? error.message : "Unknown error"}`)
