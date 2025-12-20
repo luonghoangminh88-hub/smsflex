@@ -348,6 +348,19 @@ export class AutoPaymentProcessor {
             }
           }
 
+          // Handle orphan transaction if no deposit is found
+          if (!deposit) {
+            const orphanResult = await this.handleOrphanTransaction(bankTx.id, transaction.amount, transaction.content)
+            if (orphanResult.success) {
+              result.successCount++
+              console.log(`[v0] ✅ Successfully handled orphan transaction ${bankTx.id}`)
+            } else {
+              result.errorCount++
+              result.errors.push(orphanResult.error || "Failed to handle orphan transaction")
+            }
+            continue
+          }
+
           if (deposit) {
             // Verify amount matches
             if (Math.abs(deposit.amount - transaction.amount) < 100) {
@@ -480,6 +493,76 @@ export class AutoPaymentProcessor {
       return { success: true }
     } catch (error) {
       console.error("[v0] ❌ Error completing deposit:", error)
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "Unknown error",
+      }
+    }
+  }
+
+  async handleOrphanTransaction(
+    bankTxId: string,
+    amount: number,
+    content: string,
+  ): Promise<{ success: boolean; error?: string }> {
+    try {
+      console.log(`[v0] 🔄 Handling orphan transaction ${bankTxId} with amount ${amount}`)
+
+      // Try to extract user ID from content
+      const userIdMatch = content.match(/NAPTEN([A-F0-9]{8})[A-F0-9]*/i)
+
+      if (!userIdMatch) {
+        console.log(`[v0] ⚠️ Cannot extract user ID from content: ${content}`)
+        return { success: false, error: "Cannot extract user ID from transaction content" }
+      }
+
+      const userIdPrefix = userIdMatch[1].toLowerCase()
+      console.log(`[v0] Extracted user ID prefix: ${userIdPrefix}`)
+
+      // Find user whose ID starts with this prefix
+      const { data: profiles, error: profileError } = await this.supabase
+        .from("profiles")
+        .select("id, email, full_name")
+
+      if (profileError || !profiles || profiles.length === 0) {
+        console.log(`[v0] ⚠️ No profiles found in database`)
+        return { success: false, error: "No users found in system" }
+      }
+
+      // Find matching user by ID prefix
+      const matchingProfile = profiles.find((p) => p.id.replace(/-/g, "").toLowerCase().startsWith(userIdPrefix))
+
+      if (!matchingProfile) {
+        console.log(`[v0] ⚠️ No user found with ID prefix: ${userIdPrefix}`)
+        return { success: false, error: `No user found matching ID prefix ${userIdPrefix}` }
+      }
+
+      console.log(`[v0] ✅ Found matching user: ${matchingProfile.email}`)
+
+      // Create a deposit for this user
+      const { data: newDeposit, error: depositError } = await this.supabase
+        .from("deposits")
+        .insert({
+          user_id: matchingProfile.id,
+          amount: amount,
+          payment_method: "bank_transfer",
+          payment_code: content.match(/NAPTEN[A-F0-9]{8,}/i)?.[0] || `AUTO_${Date.now()}`,
+          status: "pending",
+        })
+        .select()
+        .single()
+
+      if (depositError || !newDeposit) {
+        console.error(`[v0] ❌ Failed to create deposit:`, depositError)
+        return { success: false, error: depositError?.message || "Failed to create deposit" }
+      }
+
+      console.log(`[v0] ✅ Created deposit ${newDeposit.id} for user ${matchingProfile.id}`)
+
+      // Now complete the deposit
+      return await this.completeDeposit(bankTxId, newDeposit.id, matchingProfile.id)
+    } catch (error) {
+      console.error("[v0] ❌ Error handling orphan transaction:", error)
       return {
         success: false,
         error: error instanceof Error ? error.message : "Unknown error",
