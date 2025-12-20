@@ -318,20 +318,33 @@ export class AutoPaymentProcessor {
           if (!deposit && transaction.content) {
             console.log(`[v0] Attempting to match deposit by payment_code in content: ${transaction.content}`)
 
-            const { data, error } = await this.supabase
-              .from("deposits")
-              .select("*, profiles!inner(*)")
-              .eq("status", "pending")
-              .eq("payment_code", transaction.content)
-              .maybeSingle()
+            // Extract all potential payment codes from the transaction content
+            // Look for patterns like NAPTEN followed by hex characters
+            const paymentCodeMatch = transaction.content.match(/NAPTEN[A-F0-9]{8,}/i)
 
-            deposit = data
-            depositError = error
+            if (paymentCodeMatch) {
+              const extractedCode = paymentCodeMatch[0]
+              console.log(`[v0] Extracted payment code from content: ${extractedCode}`)
 
-            if (deposit) {
-              console.log(`[v0] ✅ Found deposit by payment_code: ${deposit.id}`)
+              // Try to find a deposit where the payment_code is the beginning of the extracted code
+              const { data: deposits, error } = await this.supabase
+                .from("deposits")
+                .select("*, profiles!inner(*)")
+                .eq("status", "pending")
+                .order("created_at", { ascending: false })
+
+              if (deposits && deposits.length > 0) {
+                // Find the deposit whose payment_code matches the start of the extracted code
+                deposit = deposits.find((d) => extractedCode.toUpperCase().startsWith(d.payment_code.toUpperCase()))
+
+                if (deposit) {
+                  console.log(`[v0] ✅ Found deposit by matching payment_code prefix: ${deposit.id}`)
+                } else {
+                  console.log(`[v0] ⚠️ No pending deposit found with matching payment_code`)
+                }
+              }
             } else {
-              console.log(`[v0] ⚠️ No pending deposit found for payment_code: ${transaction.content}`)
+              console.log(`[v0] ⚠️ No payment code pattern found in content`)
             }
           }
 
