@@ -17,13 +17,25 @@ export class AutoPaymentProcessor {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
-    if (!supabaseUrl || !supabaseKey) {
+    if (!supabaseUrl) {
       throw new Error(
-        "Missing Supabase credentials. Please check NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in .env",
+        "Missing SUPABASE_URL. Please check NEXT_PUBLIC_SUPABASE_URL or SUPABASE_URL in environment variables",
       )
     }
 
-    this.supabase = createClient(supabaseUrl, supabaseKey)
+    if (!supabaseKey) {
+      throw new Error(
+        "Missing SUPABASE_SERVICE_ROLE_KEY in environment variables. This is required for auto-payment processing.",
+      )
+    }
+
+    try {
+      this.supabase = createClient(supabaseUrl, supabaseKey)
+      console.log("[v0] AutoPaymentProcessor initialized with Supabase client")
+    } catch (error) {
+      console.error("[v0] Failed to create Supabase client:", error)
+      throw new Error(`Failed to initialize Supabase: ${error instanceof Error ? error.message : "Unknown error"}`)
+    }
   }
 
   async processEmails(): Promise<ProcessingResult> {
@@ -54,21 +66,23 @@ export class AutoPaymentProcessor {
       console.log(`[v0] Connecting to ${emailHost}:${emailPort} as ${emailUser}`)
 
       // Initialize IMAP client
-      const imapClient = new ImapClient({
-        user: emailUser,
-        password: emailPassword,
-        host: emailHost,
-        port: emailPort,
-        tls: true,
-        authTimeout: 15000, // 15 seconds
-        connTimeout: 15000,
-      })
-
-      const { data: activePaymentMethods } = await this.supabase
-        .from("payment_methods")
-        .select("bank_code")
-        .eq("is_active", true)
-        .not("bank_code", "is", null)
+      let imapClient
+      try {
+        imapClient = new ImapClient({
+          user: emailUser,
+          password: emailPassword,
+          host: emailHost,
+          port: emailPort,
+          tls: true,
+          authTimeout: 15000,
+          connTimeout: 15000,
+        })
+      } catch (error) {
+        const errorMsg = `Failed to initialize IMAP client: ${error instanceof Error ? error.message : "Unknown error"}`
+        console.error(`[v0] ${errorMsg}`)
+        result.errors.push(errorMsg)
+        return result
+      }
 
       // Map bank codes to email addresses
       const bankCodeToEmail: Record<string, string> = {
@@ -80,6 +94,26 @@ export class AutoPaymentProcessor {
       }
 
       const bankEmails: string[] = []
+      let activePaymentMethods
+      try {
+        const { data, error } = await this.supabase
+          .from("payment_methods")
+          .select("bank_code")
+          .eq("is_active", true)
+          .not("bank_code", "is", null)
+
+        if (error) {
+          console.error("[v0] Failed to fetch payment methods:", error)
+          result.errors.push(`Database error: ${error.message}`)
+        }
+        activePaymentMethods = data
+      } catch (error) {
+        const errorMsg = `Failed to query payment methods: ${error instanceof Error ? error.message : "Unknown error"}`
+        console.error(`[v0] ${errorMsg}`)
+        result.errors.push(errorMsg)
+        activePaymentMethods = null
+      }
+
       if (activePaymentMethods) {
         for (const pm of activePaymentMethods) {
           if (pm.bank_code && bankCodeToEmail[pm.bank_code]) {
@@ -102,8 +136,6 @@ export class AutoPaymentProcessor {
         const errorMsg = error instanceof Error ? error.message : "Unknown IMAP error"
         console.error(`[v0] Failed to fetch emails: ${errorMsg}`)
         result.errors.push(`Email fetch failed: ${errorMsg}`)
-
-        // Return early but with detailed error info
         return result
       }
 
@@ -116,113 +148,132 @@ export class AutoPaymentProcessor {
         const emailText = email.text || email.html || ""
         console.log(`[v0] Processing email from: ${email.from}, subject: ${email.subject}`)
         console.log(`[v0] Email text length: ${emailText.length} characters`)
-        console.log(`[v0] Email preview (first 500 chars):`, emailText.substring(0, 500))
 
-        const transaction = BankEmailParser.parse(email.from, emailText)
+        // Parse email
+        let transaction
+        try {
+          transaction = BankEmailParser.parse(email.from, emailText)
+        } catch (parseError) {
+          console.error("[v0] Email parsing error:", parseError)
+          result.errorCount++
+          result.errors.push(`Parse error: ${parseError instanceof Error ? parseError.message : "Unknown error"}`)
+          continue
+        }
 
         if (!transaction) {
           result.errorCount++
           const errorMsg = `Failed to parse email from "${email.from}"`
           console.error(`[v0] ${errorMsg}`)
-          console.error(`[v0] Email subject: ${email.subject}`)
-          console.error(`[v0] Email text preview:`, emailText.substring(0, 1000))
           result.errors.push(errorMsg)
 
-          await this.supabase.from("bank_transactions").insert({
-            transaction_id: `FAILED_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-            amount: 0,
-            content: email.subject || "No subject",
-            sender_info: email.from,
-            bank_name: "Unknown",
-            email_subject: email.subject,
-            email_from: email.from,
-            email_date: email.date,
-            email_body: emailText.substring(0, 5000), // Store first 5000 chars for analysis
-            status: "parse_failed",
-            error_message: "Failed to parse email content - check email_body for raw content",
-          })
+          // Save parse error to DB
+          try {
+            await this.supabase.from("bank_transactions").insert({
+              transaction_id: `FAILED_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+              amount: 0,
+              content: email.subject || "No subject",
+              sender_info: email.from,
+              bank_name: "Unknown",
+              email_subject: email.subject,
+              email_from: email.from,
+              email_date: email.date,
+              email_body: emailText.substring(0, 5000),
+              status: "parse_failed",
+              error_message: "Failed to parse email content",
+            })
+          } catch (dbError) {
+            console.error("[v0] Failed to save parse error to DB:", dbError)
+          }
 
           continue
         }
 
         console.log("[v0] Parsed transaction:", transaction)
 
-        const { data: existing } = await this.supabase
-          .from("bank_transactions")
-          .select("id")
-          .eq("transaction_id", transaction.transactionId)
-          .single()
+        // Database operations
+        try {
+          const { data: existing } = await this.supabase
+            .from("bank_transactions")
+            .select("id")
+            .eq("transaction_id", transaction.transactionId)
+            .single()
 
-        if (existing) {
-          console.log(`[v0] Transaction ${transaction.transactionId} already processed`)
-          continue
-        }
+          if (existing) {
+            console.log(`[v0] Transaction ${transaction.transactionId} already processed`)
+            continue
+          }
 
-        const { data: bankTx, error: insertError } = await this.supabase
-          .from("bank_transactions")
-          .insert({
-            transaction_id: transaction.transactionId,
-            amount: transaction.amount,
-            content: transaction.content,
-            sender_info: transaction.senderInfo,
-            bank_name: transaction.bankName,
-            email_subject: email.subject,
-            email_from: email.from,
-            email_date: email.date,
-            status: "pending",
-          })
-          .select()
-          .single()
+          const { data: bankTx, error: insertError } = await this.supabase
+            .from("bank_transactions")
+            .insert({
+              transaction_id: transaction.transactionId,
+              amount: transaction.amount,
+              content: transaction.content,
+              sender_info: transaction.senderInfo,
+              bank_name: transaction.bankName,
+              email_subject: email.subject,
+              email_from: email.from,
+              email_date: email.date,
+              status: "pending",
+            })
+            .select()
+            .single()
 
-        if (insertError) {
-          result.errorCount++
-          result.errors.push(`Failed to save transaction: ${insertError.message}`)
-          continue
-        }
+          if (insertError) {
+            result.errorCount++
+            result.errors.push(`Failed to save transaction: ${insertError.message}`)
+            continue
+          }
 
-        const { data: deposit } = await this.supabase
-          .from("deposits")
-          .select("*, profiles!inner(*)")
-          .eq("status", "pending")
-          .eq("payment_code", transaction.content)
-          .single()
+          const { data: deposit } = await this.supabase
+            .from("deposits")
+            .select("*, profiles!inner(*)")
+            .eq("status", "pending")
+            .eq("payment_code", transaction.content)
+            .single()
 
-        if (deposit) {
-          // Verify amount matches
-          if (Math.abs(deposit.amount - transaction.amount) < 100) {
-            // Allow 100 VND tolerance
-            const processed = await this.completeDeposit(bankTx.id, deposit.id, deposit.user_id)
+          if (deposit) {
+            // Verify amount matches
+            if (Math.abs(deposit.amount - transaction.amount) < 100) {
+              // Allow 100 VND tolerance
+              const processed = await this.completeDeposit(bankTx.id, deposit.id, deposit.user_id)
 
-            if (processed.success) {
-              result.successCount++
-              console.log(`[v0] Successfully processed deposit ${deposit.id}`)
+              if (processed.success) {
+                result.successCount++
+                console.log(`[v0] Successfully processed deposit ${deposit.id}`)
+              } else {
+                result.errorCount++
+                result.errors.push(processed.error || "Failed to complete deposit")
+              }
             } else {
-              result.errorCount++
-              result.errors.push(processed.error || "Failed to complete deposit")
+              // Amount mismatch - manual review
+              await this.supabase
+                .from("bank_transactions")
+                .update({
+                  status: "manual_review",
+                  error_message: `Amount mismatch: expected ${deposit.amount}, got ${transaction.amount}`,
+                })
+                .eq("id", bankTx.id)
+
+              result.manualReviewCount++
             }
           } else {
-            // Amount mismatch - manual review
+            // No matching deposit found - manual review
             await this.supabase
               .from("bank_transactions")
               .update({
                 status: "manual_review",
-                error_message: `Amount mismatch: expected ${deposit.amount}, got ${transaction.amount}`,
+                error_message: "No matching deposit found",
               })
               .eq("id", bankTx.id)
 
             result.manualReviewCount++
           }
-        } else {
-          // No matching deposit found - manual review
-          await this.supabase
-            .from("bank_transactions")
-            .update({
-              status: "manual_review",
-              error_message: "No matching deposit found",
-            })
-            .eq("id", bankTx.id)
-
-          result.manualReviewCount++
+        } catch (dbError) {
+          result.errorCount++
+          const errorMsg = `Database error processing transaction: ${dbError instanceof Error ? dbError.message : "Unknown error"}`
+          console.error(`[v0] ${errorMsg}`)
+          result.errors.push(errorMsg)
         }
       }
 
