@@ -514,6 +514,22 @@ export class AutoPaymentProcessor {
     try {
       console.log(`[v0] 🔄 Handling orphan transaction ${bankTxId} with amount ${amount}`)
 
+      const { data: existingTx, error: txCheckError } = await this.supabase
+        .from("bank_transactions")
+        .select("id, status, deposit_id")
+        .eq("id", bankTxId)
+        .single()
+
+      if (txCheckError) {
+        console.error(`[v0] ❌ Error checking transaction status:`, txCheckError)
+        return { success: false, error: "Failed to check transaction status" }
+      }
+
+      if (existingTx.status === "success") {
+        console.log(`[v0] ⚠️ Transaction ${bankTxId} already processed successfully, skipping`)
+        return { success: true }
+      }
+
       // Try to extract user ID from content
       const userIdMatch = content.match(/NAPTEN([A-F0-9]{8})[A-F0-9]*/i)
 
@@ -553,27 +569,34 @@ export class AutoPaymentProcessor {
 
       console.log(`[v0] ✅ Found matching user: ${matchingProfile.email} (${matchingProfile.id})`)
 
-      // Create a deposit for this user
+      const paymentCode = content.match(/NAPTEN[A-Z0-9]{12,}/i)?.[0] || `AUTO_${Date.now()}`
+
       const { data: newDeposit, error: depositError } = await this.supabase
         .from("deposits")
-        .insert({
-          user_id: matchingProfile.id,
-          amount: amount,
-          total_amount: amount,
-          fee_amount: 0,
-          payment_method: "bank_transfer",
-          payment_code: content.match(/NAPTEN[A-Z0-9]{12,}/i)?.[0] || `AUTO_${Date.now()}`,
-          status: "pending",
-        })
+        .upsert(
+          {
+            user_id: matchingProfile.id,
+            amount: amount,
+            total_amount: amount,
+            fee: 0,
+            payment_code: paymentCode,
+            status: "pending",
+            transfer_content: content,
+          },
+          {
+            onConflict: "payment_code",
+            ignoreDuplicates: false,
+          },
+        )
         .select()
         .single()
 
       if (depositError || !newDeposit) {
-        console.error(`[v0] ❌ Failed to create deposit:`, depositError)
+        console.error(`[v0] ❌ Failed to create/update deposit:`, depositError)
         return { success: false, error: depositError?.message || "Failed to create deposit" }
       }
 
-      console.log(`[v0] ✅ Created deposit ${newDeposit.id} for user ${matchingProfile.id}`)
+      console.log(`[v0] ✅ Created/updated deposit ${newDeposit.id} for user ${matchingProfile.id}`)
 
       // Now complete the deposit
       return await this.completeDeposit(bankTxId, newDeposit.id, matchingProfile.id)
