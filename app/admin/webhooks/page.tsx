@@ -25,7 +25,7 @@ export default async function WebhooksPage() {
     .from("webhook_logs")
     .select("*")
     .order("created_at", { ascending: false })
-    .limit(100)
+    .limit(50)
 
   const stats = {
     total: webhookLogs?.length || 0,
@@ -86,7 +86,7 @@ export default async function WebhooksPage() {
       <Card>
         <CardHeader>
           <CardTitle>Lịch sử Webhook</CardTitle>
-          <CardDescription>100 webhook gần nhất</CardDescription>
+          <CardDescription>50 webhook gần nhất</CardDescription>
         </CardHeader>
         <CardContent>
           {webhookLogs && webhookLogs.length > 0 ? (

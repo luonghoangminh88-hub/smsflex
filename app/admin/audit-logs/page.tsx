@@ -13,7 +13,7 @@ import { vi } from "date-fns/locale"
 export default async function AuditLogsPage() {
   await requireAdminAuth()
 
-  const [auditLogs, securityLogs] = await Promise.all([getAuditLogs({ limit: 100 }), getSecurityLogs({ limit: 100 })])
+  const [auditLogs, securityLogs] = await Promise.all([getAuditLogs({ limit: 50 }), getSecurityLogs({ limit: 50 })])
 
   const suspiciousLogs = securityLogs.logs.filter((log) =>
     ["login_failed", "suspicious_activity", "rate_limit_exceeded"].includes(log.event_type),
@@ -79,7 +79,7 @@ export default async function AuditLogsPage() {
           <Card>
             <CardHeader>
               <CardTitle>Database Changes</CardTitle>
-              <CardDescription>Lịch sử thay đổi dữ liệu quan trọng</CardDescription>
+              <CardDescription>50 thay đổi dữ liệu gần nhất</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
@@ -109,7 +109,7 @@ export default async function AuditLogsPage() {
           <Card>
             <CardHeader>
               <CardTitle>Security Events</CardTitle>
-              <CardDescription>Lịch sử các sự kiện bảo mật</CardDescription>
+              <CardDescription>50 sự kiện bảo mật gần nhất</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">

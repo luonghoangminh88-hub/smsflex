@@ -69,6 +69,8 @@ export default function DepositPage() {
           setDepositInfo({ ...depositInfo, status: "completed" })
           setShowSuccessAnimation(true)
 
+          router.refresh()
+
           // Play success sound
           try {
             const audio = new Audio("/sounds/success.mp3")
