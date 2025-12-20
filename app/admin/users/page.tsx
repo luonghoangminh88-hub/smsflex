@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/server"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input"
 export const dynamic = "force-dynamic"
 
 export default async function AdminUsersPage() {
-  const supabase = await createClient()
+  const supabase = await createAdminClient()
 
   const { data: users } = await supabase.from("profiles").select("*").order("created_at", { ascending: false })
 

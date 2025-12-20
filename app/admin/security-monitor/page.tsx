@@ -87,7 +87,7 @@ export default async function SecurityMonitorPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{securityMetrics.rateLimitExceeded}</div>
-            <p className="text-xs text-muted-foreground">24 giờ qua</p>
+            <p className="text-xs text-muted-foreground">24 gi��� qua</p>
           </CardContent>
         </Card>
 

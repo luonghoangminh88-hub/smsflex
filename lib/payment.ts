@@ -33,12 +33,12 @@ export interface Deposit {
 
 /**
  * Generate unique payment code for user
- * Format: NAPTEN_[UserID]_[Timestamp]
+ * Format: NAPTEN[Full_UserID_Without_Hyphens]
  */
 export function generatePaymentCode(userId: string): string {
-  const shortUserId = userId.substring(0, 8).toUpperCase()
-  const timestamp = Date.now().toString().slice(-8)
-  return `NAPTEN${shortUserId}${timestamp}`
+  // This ensures the extracted user_id from bank emails matches the deposits table
+  const cleanUserId = userId.replace(/-/g, "").toUpperCase()
+  return `NAPTEN${cleanUserId}`
 }
 
 /**
