@@ -22,6 +22,11 @@ const translations = {
     // Rental
     rental: {
       selectService: "Chọn dịch vụ và quốc gia để bắt đầu thuê số điện thoại ảo",
+      selectServiceFirst: "Chọn dịch vụ để bắt đầu",
+      selectServiceDescription:
+        "Vui lòng chọn dịch vụ và quốc gia từ bảng bên trái để xem giá và thuê số điện thoại ảo",
+      selectCountryNext: "Chọn quốc gia tiếp theo",
+      selectCountryDescription: "Chọn quốc gia từ danh sách bên dưới để xem giá và thuê số điện thoại ảo",
       selectCountry: "Chọn quốc gia",
       selectServiceAndCountry: "Vui lòng chọn cả dịch vụ và quốc gia",
       errorRentingNumber: "Có lỗi xảy ra khi thuê số",
@@ -127,6 +132,11 @@ const translations = {
     // Rental
     rental: {
       selectService: "Select a service and country to start renting a virtual phone number",
+      selectServiceFirst: "Select a service to get started",
+      selectServiceDescription:
+        "Please select a service and country from the left panel to view pricing and rent a virtual phone number",
+      selectCountryNext: "Select a country next",
+      selectCountryDescription: "Select a country from the list below to view pricing and rent a virtual phone number",
       selectCountry: "Select Country",
       selectServiceAndCountry: "Please select both service and country",
       errorRentingNumber: "An error occurred while renting number",
