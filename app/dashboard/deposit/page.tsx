@@ -11,8 +11,12 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { formatVND } from "@/lib/currency"
+import { toast } from "sonner"
 
 const PRESET_AMOUNTS = [50000, 100000, 200000, 500000, 1000000]
+const POLL_INTERVAL = 3000 // Poll every 3 seconds
+const MAX_POLL_COUNT = 100 // Stop after 5 minutes (100 * 3s)
+const SUCCESS_REDIRECT_DELAY = 3000 // Redirect after 3 seconds
 
 interface PaymentMethod {
   id: string
@@ -43,6 +47,7 @@ export default function DepositPage() {
   const [copied, setCopied] = useState<string | null>(null)
   const [isPolling, setIsPolling] = useState(false)
   const [pollCount, setPollCount] = useState(0)
+  const [showSuccessAnimation, setShowSuccessAnimation] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -57,24 +62,59 @@ export default function DepositPage() {
         const response = await fetch(`/api/deposits/status?id=${depositInfo.id}`)
         const data = await response.json()
 
+        console.log("[v0] Polling deposit status:", {
+          depositId: depositInfo.id,
+          status: data.deposit?.status,
+          pollCount: pollCount + 1,
+        })
+
         if (data.deposit?.status === "completed") {
           setIsPolling(false)
           setDepositInfo({ ...depositInfo, status: "completed" })
-          alert("🎉 Thanh toán thành công! Số dư của bạn đã được cập nhật.")
+          setShowSuccessAnimation(true)
+
+          // Play success sound
+          try {
+            const audio = new Audio("/sounds/success.mp3")
+            audio.volume = 0.3
+            audio.play().catch(() => {
+              // Silently fail if audio can't play
+            })
+          } catch (e) {
+            // Ignore audio errors
+          }
+
+          // Show toast notification
+          toast.success("Thanh toán thành công!", {
+            description: `+${formatVND(depositInfo.amount)} đã được cộng vào tài khoản`,
+            duration: 5000,
+          })
+
+          // Auto-redirect after 3 seconds
+          setTimeout(() => {
+            router.push("/dashboard")
+          }, SUCCESS_REDIRECT_DELAY)
+
+          return
         }
 
-        setPollCount((prev) => prev + 1)
-
-        if (pollCount >= 60) {
-          setIsPolling(false)
-        }
+        setPollCount((prev) => {
+          const newCount = prev + 1
+          if (newCount >= MAX_POLL_COUNT) {
+            setIsPolling(false)
+            toast.warning("Vẫn chưa nhận được xác nhận", {
+              description: "Vui lòng kiểm tra lại giao dịch hoặc liên hệ hỗ trợ",
+            })
+          }
+          return newCount
+        })
       } catch (err) {
         console.error("[v0] Error polling deposit status:", err)
       }
-    }, 5000)
+    }, POLL_INTERVAL)
 
     return () => clearInterval(pollInterval)
-  }, [depositInfo, isPolling, pollCount])
+  }, [depositInfo, isPolling, pollCount, router])
 
   const loadPaymentMethods = async () => {
     try {
@@ -135,8 +175,12 @@ export default function DepositPage() {
       setDepositInfo(data.deposit)
       setIsPolling(true)
       setPollCount(0)
+      setShowSuccessAnimation(false)
     } catch (err: any) {
       setError(err.message || "Đã xảy ra lỗi khi tạo yêu cầu nạp tiền")
+      toast.error("Không thể tạo yêu cầu nạp tiền", {
+        description: err.message,
+      })
     } finally {
       setIsLoading(false)
     }
@@ -165,15 +209,24 @@ export default function DepositPage() {
           </CardHeader>
           <CardContent className="space-y-6 p-4 sm:p-6">
             {isCompleted ? (
-              <div className="flex flex-col items-center justify-center py-8 space-y-4">
-                <CheckCircle2 className="h-16 w-16 text-green-500" />
-                <div className="text-center">
-                  <p className="text-lg font-semibold">Nạp tiền thành công!</p>
-                  <p className="text-muted-foreground">Bạn đã nạp {formatVND(depositInfo.amount)} vào tài khoản</p>
+              <div className="flex flex-col items-center justify-center py-8 space-y-6">
+                <div className={`${showSuccessAnimation ? "animate-scale-in" : ""}`}>
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-green-400 rounded-full blur-2xl opacity-30 animate-pulse" />
+                    <CheckCircle2 className="relative h-24 w-24 text-green-500 animate-bounce-once" />
+                  </div>
                 </div>
-                <Button onClick={() => router.push("/dashboard")} className="mt-4 min-h-[48px]">
-                  Quay về trang chủ
-                </Button>
+                <div className="text-center space-y-2">
+                  <p className="text-2xl font-bold text-green-600">Thanh toán thành công!</p>
+                  <p className="text-lg text-muted-foreground">
+                    Bạn đã nạp <span className="font-semibold text-foreground">{formatVND(depositInfo.amount)}</span>{" "}
+                    vào tài khoản
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Đang chuyển về trang chủ...</span>
+                </div>
               </div>
             ) : (
               <>
@@ -183,9 +236,16 @@ export default function DepositPage() {
                     <AlertDescription className="text-blue-900 dark:text-blue-100">
                       <div className="flex items-center gap-2">
                         <Loader2 className="h-4 w-4 animate-spin" />
-                        <span>Đang chờ xác nhận thanh toán... ({pollCount * 5}s)</span>
+                        <span className="font-semibold">Đang chờ xác nhận thanh toán...</span>
                       </div>
-                      <p className="text-xs mt-1">Hệ thống đang tự động kiểm tra giao dịch của bạn</p>
+                      <p className="text-xs mt-2">
+                        Hệ thống đang tự động kiểm tra giao dịch của bạn (
+                        {Math.floor((pollCount * POLL_INTERVAL) / 1000)}
+                        s)
+                      </p>
+                      <p className="text-xs mt-1 opacity-75">
+                        Trang sẽ tự động cập nhật khi nhận được xác nhận từ ngân hàng
+                      </p>
                     </AlertDescription>
                   </Alert>
                 )}
@@ -288,7 +348,9 @@ export default function DepositPage() {
                     <strong>Lưu ý quan trọng:</strong>
                     <ul className="list-disc list-inside mt-2 space-y-1">
                       <li>Vui lòng nhập chính xác nội dung chuyển khoản để hệ thống tự động cộng tiền</li>
-                      <li>Số dư sẽ được cập nhật trong vòng 1-5 phút sau khi chuyển khoản thành công</li>
+                      <li>
+                        <strong>Số dư sẽ được cập nhật TỰ ĐỘNG</strong> trong vòng 1-5 phút, không cần tải lại trang
+                      </li>
                       <li>Nếu sau 30 phút chưa nhận được tiền, vui lòng liên hệ hỗ trợ</li>
                     </ul>
                   </AlertDescription>
