@@ -246,13 +246,22 @@ export class AutoPaymentProcessor {
         try {
           const { data: existing } = await this.supabase
             .from("bank_transactions")
-            .select("id")
+            .select("id, status")
             .eq("transaction_id", transaction.transactionId)
             .single()
 
           if (existing) {
-            console.log(`[v0] Transaction ${transaction.transactionId} already processed`)
-            continue
+            // Only skip if transaction was successfully completed
+            if (existing.status === "success" || existing.status === "completed") {
+              console.log(`[v0] Transaction ${transaction.transactionId} already completed successfully, skipping`)
+              continue
+            } else {
+              console.log(
+                `[v0] Transaction ${transaction.transactionId} exists with status "${existing.status}", reprocessing...`,
+              )
+              // Delete the incomplete transaction so we can reprocess it
+              await this.supabase.from("bank_transactions").delete().eq("id", existing.id)
+            }
           }
 
           const { data: bankTx, error: insertError } = await this.supabase
@@ -266,7 +275,7 @@ export class AutoPaymentProcessor {
               email_subject: email.subject,
               email_from: email.from,
               email_date: email.date.toISOString(), // Email date is already parsed correctly by IMAP
-              status: "pending",
+              status: "processing",
             })
             .select()
             .single()
@@ -276,6 +285,8 @@ export class AutoPaymentProcessor {
             result.errors.push(`Failed to save transaction: ${insertError.message}`)
             continue
           }
+
+          console.log(`[v0] Created bank transaction with status "processing": ${bankTx.id}`)
 
           let deposit: any = null
           let depositError: any = null
