@@ -150,7 +150,7 @@ export default async function RentPage() {
                 <div className="flex-1 min-w-0">
                   <div className="font-semibold mb-1 text-sm">Chọn dịch vụ và quốc gia</div>
                   <p className="text-xs sm:text-sm text-muted-foreground">
-                    Bạn chọn dịch vụ cần nhận OTP (Facebook, Zalo, Grab, v.v.) và quốc gia bạn muốn số điện thoại đến từ
+                    Bạn chọn dịch vụ cần nhận OTP (Facebook, Shopee, Chat GPT, v.v.) và quốc gia bạn muốn số điện thoại đến từ
                     đó.
                   </p>
                 </div>
@@ -163,7 +163,7 @@ export default async function RentPage() {
                 <div className="flex-1 min-w-0">
                   <div className="font-semibold mb-1 text-sm">Hệ thống cấp số điện thoại</div>
                   <p className="text-xs sm:text-sm text-muted-foreground">
-                    Hệ thống tự động thuê số từ các nhà cung cấp như SMS-Activate hoặc 5SIM. Bạn nhận được số điện thoại
+                    Hệ thống tự động thuê số từ các nhà cung cấp uy tín. Bạn sẽ luôn nhận được số điện thoại
                     thật để sử dụng.
                   </p>
                 </div>
@@ -202,8 +202,7 @@ export default async function RentPage() {
                   OTP thành công, số điện thoại sẽ được giải phóng và không thể sử dụng lại.
                   <br />
                   <br />
-                  <strong>Dịch vụ thử nghiệm:</strong> Các dịch vụ Việt Nam như Zalo, Grab, Xanh SM sử dụng service code
-                  "other" (nhận tất cả SMS). Hệ thống vẫn hoàn tiền nếu không nhận được OTP trong thời gian quy định.
+                  <strong>Hệ thống sẽ hoàn tiền nếu không nhận được OTP trong thời gian quy định.</strong> 
                 </AlertDescription>
               </div>
             </div>
