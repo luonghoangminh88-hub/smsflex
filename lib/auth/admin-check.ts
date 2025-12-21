@@ -100,3 +100,64 @@ export async function getCurrentUserProfile() {
     return null
   }
 }
+
+/**
+ * Check admin authentication for API routes
+ * Returns authorization status with error details
+ * Use this in API route handlers
+ */
+export async function checkAdminAuth(): Promise<{
+  authorized: boolean
+  error?: string
+  status?: number
+  userId?: string
+}> {
+  noStore()
+
+  try {
+    const supabase = await createClient()
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    if (!user) {
+      return {
+        authorized: false,
+        error: "Unauthorized - Please login",
+        status: 401,
+      }
+    }
+
+    const { data: profile, error } = await supabase.from("profiles").select("role").eq("id", user.id).single()
+
+    if (error || !profile) {
+      console.error("[Admin Check] Error fetching profile:", error)
+      return {
+        authorized: false,
+        error: "Failed to verify admin status",
+        status: 500,
+      }
+    }
+
+    if (profile.role !== "admin") {
+      return {
+        authorized: false,
+        error: "Forbidden - Admin access required",
+        status: 403,
+      }
+    }
+
+    return {
+      authorized: true,
+      userId: user.id,
+    }
+  } catch (error) {
+    console.error("[Admin Check] Unexpected error:", error)
+    return {
+      authorized: false,
+      error: "Internal server error",
+      status: 500,
+    }
+  }
+}
