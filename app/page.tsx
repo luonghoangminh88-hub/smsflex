@@ -24,7 +24,7 @@ export default function HomePage() {
       <div className="bg-primary text-primary-foreground py-2 px-4 text-center text-sm">
         <span className="inline-flex items-center gap-2">
           <TrendingUp className="h-4 w-4" />
-          Nhận OTP trong 30 giây – Hoàn tiền tự động nếu không nhận được mã.
+          Nhận OTP trong 30 giây – Hoàn tiền tự động nếu không nhận được mã
         </span>
       </div>
 
