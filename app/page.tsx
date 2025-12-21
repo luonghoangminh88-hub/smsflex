@@ -64,16 +64,16 @@ export default function HomePage() {
               Đã có 10,000+ người dùng tin tưởng
             </div>
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-balance leading-tight">
-              Thuê SIM ảo nhận OTP <span className="text-primary">nhanh trong 30 giây</span>
+              Tối ưu xác minh tài khoản tự động <span className="text-primary">nhận OTP trong 30 giây</span>
             </h1>
             <p className="text-xl text-muted-foreground text-pretty leading-relaxed">
-              Giải pháp số 1 tại Việt Nam cho xác minh tài khoản. Hỗ trợ 200+ dịch vụ phổ biến, 50+ quốc gia, giá từ
-              2,000đ. Không cần đăng ký SIM thật, không rủi ro bị khóa tài khoản chính.
+              Giải pháp xác minh OTP tức thì cho mọi nền tảng: Telegram, Facebook, Google, Microsoft, Binance và hơn 200 dịch vụ khác.
+Hỗ trợ số ảo quốc tế từ 50+ quốc gia – phù hợp cho marketing, thử nghiệm sản phẩm và hoạt động đa tài khoản.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <Button asChild size="lg" className="text-lg h-12 px-8">
                 <Link href="/auth/signup">
-                  Dùng thử miễn phí
+                  Đăng ký ngay
                   <ChevronRight className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
@@ -432,7 +432,7 @@ export default function HomePage() {
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-400 to-purple-400" />
                   <div>
-                    <div className="font-semibold">Nguyễn Văn A</div>
+                    <div className="font-semibold">Nguyễn Đình Bảo</div>
                     <div className="text-sm text-muted-foreground">Digital Marketer</div>
                   </div>
                 </div>
@@ -453,7 +453,7 @@ export default function HomePage() {
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-full bg-gradient-to-br from-green-400 to-blue-400" />
                   <div>
-                    <div className="font-semibold">Trần Thị B</div>
+                    <div className="font-semibold">Trần Thị Trang </div>
                     <div className="text-sm text-muted-foreground">Freelancer</div>
                   </div>
                 </div>
@@ -474,7 +474,7 @@ export default function HomePage() {
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-full bg-gradient-to-br from-orange-400 to-red-400" />
                   <div>
-                    <div className="font-semibold">Lê Văn C</div>
+                    <div className="font-semibold">Lê Hữu Xuân</div>
                     <div className="text-sm text-muted-foreground">Chủ shop online</div>
                   </div>
                 </div>
