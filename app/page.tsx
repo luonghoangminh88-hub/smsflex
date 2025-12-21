@@ -24,7 +24,7 @@ export default function HomePage() {
       <div className="bg-primary text-primary-foreground py-2 px-4 text-center text-sm">
         <span className="inline-flex items-center gap-2">
           <TrendingUp className="h-4 w-4" />
-          Ưu đãi đặc biệt: Nạp lần đầu tặng thêm 10% - Chỉ trong tháng này!
+          Nhận OTP trong 30 giây – Hoàn tiền tự động nếu không nhận được mã.
         </span>
       </div>
 
@@ -432,7 +432,7 @@ Hỗ trợ số ảo quốc tế từ 50+ quốc gia – phù hợp cho marketin
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-400 to-purple-400" />
                   <div>
-                    <div className="font-semibold">Nguyễn Đình Bảo</div>
+                    <div className="font-semibold">Nguyễn </div>
                     <div className="text-sm text-muted-foreground">Digital Marketer</div>
                   </div>
                 </div>
