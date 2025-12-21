@@ -5,17 +5,25 @@ import { rentNumberWithFailover } from "@/lib/multi-provider-client"
 import { notifyRentalCreated, notifyBalanceLow } from "@/lib/notification-service"
 import { rentalSchema, validateAndSanitize } from "@/lib/security/api-validation"
 import { checkIdempotency, completeIdempotency, failIdempotency, generateIdempotencyKey } from "@/lib/idempotency"
+import { z } from "zod"
 
 export async function POST(request: Request) {
   try {
     const body = await request.json()
 
-    const validation = validateAndSanitize(rentalSchema, body)
+    const enhancedSchema = rentalSchema.extend({
+      rentalType: z.enum(["standard", "multi-service", "long-term"]).optional().default("standard"),
+      additionalServices: z.array(z.string()).optional(),
+      rentDurationHours: z.number().optional(),
+      expectedPrice: z.number().positive(),
+    })
+
+    const validation = validateAndSanitize(enhancedSchema, body)
     if (!validation.success) {
       return NextResponse.json({ error: validation.error }, { status: 400 })
     }
 
-    const { serviceId, countryId } = validation.data
+    const { serviceId, countryId, rentalType, additionalServices, rentDurationHours, expectedPrice } = validation.data
 
     const cookieStore = await cookies()
     const supabase = createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
@@ -57,7 +65,7 @@ export async function POST(request: Request) {
 
       const { data: pricing } = await supabase
         .from("service_prices")
-        .select("price")
+        .select("price, cost_price")
         .eq("service_id", serviceId)
         .eq("country_id", countryId)
         .eq("is_available", true)
@@ -69,10 +77,46 @@ export async function POST(request: Request) {
         return NextResponse.json(errorResponse, { status: 400 })
       }
 
+      const { calculateRentalPricing, validatePricingRequest } = await import("@/lib/pricing-calculator")
+
+      const pricingValidation = validatePricingRequest(
+        expectedPrice,
+        pricing.price,
+        pricing.cost_price || pricing.price * 0.7, // Changed fallback from 0.8 to 0.7 to ensure minimum 5% profit margin with discounts
+        rentalType,
+        additionalServices?.length || 0,
+        rentDurationHours,
+      )
+
+      if (!pricingValidation.valid) {
+        console.error("[Rental] Pricing validation failed:", pricingValidation.error)
+        const errorResponse = {
+          error: "Pricing validation failed",
+          details: pricingValidation.error,
+          calculatedPrice: pricingValidation.calculatedPrice,
+        }
+        await failIdempotency(idempotencyKey, { message: errorResponse.error, status: 400 })
+        return NextResponse.json(errorResponse, { status: 400 })
+      }
+
+      const calculatedPricing = calculateRentalPricing({
+        basePrice: pricing.price,
+        costPrice: pricing.cost_price || pricing.price * 0.7, // Changed fallback from 0.8 to 0.7 for consistent profit calculation
+        rentalType,
+        additionalServicesCount: additionalServices?.length || 0,
+        rentDurationHours: rentDurationHours || 0,
+      })
+
+      console.log("[Rental] Pricing breakdown:", calculatedPricing)
+
       const { data: profile } = await supabase.from("profiles").select("balance").eq("id", user.id).single()
 
-      if (!profile || profile.balance < pricing.price) {
-        const errorResponse = { error: "Insufficient balance" }
+      if (!profile || profile.balance < calculatedPricing.finalPrice) {
+        const errorResponse = {
+          error: "Insufficient balance",
+          required: calculatedPricing.finalPrice,
+          current: profile?.balance || 0,
+        }
         await failIdempotency(idempotencyKey, { message: errorResponse.error, status: 400 })
         return NextResponse.json(errorResponse, { status: 400 })
       }
@@ -96,7 +140,11 @@ export async function POST(request: Request) {
           country_id: countryId,
           activation_id: rentalResult.activationId,
           phone_number: rentalResult.phoneNumber,
-          price: pricing.price,
+          price: calculatedPricing.finalPrice, // Use calculated final price
+          cost_price: pricing.cost_price || pricing.price * 0.7, // Changed fallback from 0.8 to 0.7 for accurate cost tracking
+          rental_type: rentalType,
+          additional_services: additionalServices,
+          rent_duration_hours: rentDurationHours,
           status: "active",
           provider: rentalResult.provider,
           expires_at: new Date(Date.now() + 20 * 60 * 1000).toISOString(),
@@ -116,18 +164,27 @@ export async function POST(request: Request) {
         throw rentalError
       }
 
-      const newBalance = Number.parseFloat(profile.balance.toString()) - Number.parseFloat(pricing.price.toString())
+      const newBalance = Number.parseFloat(profile.balance.toString()) - calculatedPricing.finalPrice
       await supabase.from("profiles").update({ balance: newBalance }).eq("id", user.id)
 
       await supabase.from("transactions").insert({
         user_id: user.id,
         rental_id: rental.id,
         type: "rental_purchase",
-        amount: -pricing.price,
+        amount: -calculatedPricing.finalPrice,
         balance_before: profile.balance,
         balance_after: newBalance,
         status: "completed",
         description: `Rental for ${service.name} - ${country.name} (${rentalResult.provider})`,
+        metadata: {
+          rentalType,
+          originalPrice: calculatedPricing.originalPrice,
+          discount: calculatedPricing.discount,
+          discountPercentage: calculatedPricing.discountPercentage,
+          finalPrice: calculatedPricing.finalPrice,
+          adminProfit: calculatedPricing.adminProfit,
+          adminProfitPercentage: calculatedPricing.adminProfitPercentage,
+        },
       })
 
       await notifyRentalCreated(user.id, rentalResult.phoneNumber, service.name, country.name)

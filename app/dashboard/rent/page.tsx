@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft, Shield, Zap, TrendingUp, AlertCircle } from "lucide-react"
 import Link from "next/link"
-import { FivesimInspiredSelector } from "@/components/fivesim-inspired-selector"
+import { EnhancedRentalSelector } from "@/components/enhanced-rental-selector"
 import type { Service, Country, ServicePrice, Profile } from "@/lib/types"
 import { formatVND } from "@/lib/currency"
 
@@ -77,18 +77,17 @@ export default async function RentPage() {
               <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5 text-cyan-600 dark:text-cyan-400 flex-shrink-0 mt-0.5" />
               <div className="flex-1 min-w-0">
                 <p className="text-xs sm:text-sm font-medium text-cyan-900 dark:text-cyan-100 mb-1">
-                  Giá tối ưu tự động cho mọi dịch vụ!
+                  ⚡ Nâng cấp mới: Nhận OTP realtime, thuê đa dịch vụ tiết kiệm 47%, thuê dài hạn giảm 50%!
                 </p>
                 <p className="text-[11px] sm:text-xs text-cyan-700 dark:text-cyan-300 leading-relaxed">
-                  Hệ thống tự động chọn nhà cung cấp có giá tốt nhất và tỷ lệ thành công cao nhất để mang đến trải
-                  nghiệm tốt nhất cho bạn.
+                  Hệ thống tự động chọn nhà cung cấp tốt nhất, webhook nhận OTP tức thì, không cần chờ đợi.
                 </p>
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <FivesimInspiredSelector
+        <EnhancedRentalSelector
           services={(services as Service[]) || []}
           countries={(countries as Country[]) || []}
           servicePrices={(servicePrices as ServicePrice[]) || []}
@@ -150,8 +149,8 @@ export default async function RentPage() {
                 <div className="flex-1 min-w-0">
                   <div className="font-semibold mb-1 text-sm">Chọn dịch vụ và quốc gia</div>
                   <p className="text-xs sm:text-sm text-muted-foreground">
-                    Bạn chọn dịch vụ cần nhận OTP (Facebook, Shopee, Chat GPT, v.v.) và quốc gia bạn muốn số điện thoại đến từ
-                    đó.
+                    Bạn chọn dịch vụ cần nhận OTP (Facebook, Shopee, Chat GPT, v.v.) và quốc gia bạn muốn số điện thoại
+                    đến từ đó.
                   </p>
                 </div>
               </div>
@@ -163,8 +162,8 @@ export default async function RentPage() {
                 <div className="flex-1 min-w-0">
                   <div className="font-semibold mb-1 text-sm">Hệ thống cấp số điện thoại</div>
                   <p className="text-xs sm:text-sm text-muted-foreground">
-                    Hệ thống tự động thuê số từ các nhà cung cấp uy tín. Bạn sẽ luôn nhận được số điện thoại
-                    thật để sử dụng.
+                    Hệ thống tự động thuê số từ các nhà cung cấp uy tín. Bạn sẽ luôn nhận được số điện thoại thật để sử
+                    dụng.
                   </p>
                 </div>
               </div>
@@ -202,7 +201,7 @@ export default async function RentPage() {
                   OTP thành công, số điện thoại sẽ được giải phóng và không thể sử dụng lại.
                   <br />
                   <br />
-                  <strong>Hệ thống sẽ hoàn tiền nếu không nhận được OTP trong thời gian quy định.</strong> 
+                  <strong>Hệ thống sẽ hoàn tiền nếu không nhận được OTP trong thời gian quy định.</strong>
                 </AlertDescription>
               </div>
             </div>
