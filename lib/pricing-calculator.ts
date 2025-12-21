@@ -52,15 +52,15 @@ export function calculateRentalPricing(input: PricingInput): PricingResult {
     if (rentDurationHours === 168) {
       // 1 week
       multiplier = 24
-      discountPercentage = 0.25 // 25% off (was 50%)
+      discountPercentage = 0.3 // 30% off to match UI
     } else if (rentDurationHours === 24) {
       // 1 day
       multiplier = 4
-      discountPercentage = 0.18 // 18% off (was 30%)
+      discountPercentage = 0.2 // 20% off to match UI
     } else if (rentDurationHours === 4) {
       // 4 hours
       multiplier = 1
-      discountPercentage = 0.08 // 8% off (was 10%)
+      discountPercentage = 0.05 // 5% off (basic discount)
     }
   }
 
@@ -70,7 +70,6 @@ export function calculateRentalPricing(input: PricingInput): PricingResult {
   let finalPrice = Math.round(originalPrice - discountAmount)
 
   // Calculate admin profit
-  // Admin profit = final price - (cost price × multiplier)
   const totalCost = costPrice * multiplier
   let adminProfit = finalPrice - totalCost
   let adminProfitPercentage = totalCost > 0 ? (adminProfit / totalCost) * 100 : 0

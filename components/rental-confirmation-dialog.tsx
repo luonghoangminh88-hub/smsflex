@@ -107,9 +107,9 @@ export function RentalConfirmationDialog({
                 Dịch vụ bổ sung
               </div>
               <div className="flex flex-wrap gap-2">
-                {additionalServices.map((svc) => (
-                  <Badge key={svc} variant="outline">
-                    {svc}
+                {additionalServices.map((serviceName) => (
+                  <Badge key={serviceName} variant="outline" className="text-xs">
+                    {serviceName}
                   </Badge>
                 ))}
               </div>

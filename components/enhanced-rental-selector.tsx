@@ -46,6 +46,7 @@ export function EnhancedRentalSelector({
 
   const [rentalType, setRentalType] = useState<RentalType>("standard")
   const [additionalServices, setAdditionalServices] = useState<Set<string>>(new Set())
+  const [additionalServiceNames, setAdditionalServiceNames] = useState<Map<string, string>>(new Map())
   const [rentDuration, setRentDuration] = useState<4 | 24 | 168>(4) // hours
 
   const [locale, setLocale] = useState<Locale>("vi")
@@ -167,6 +168,7 @@ export function EnhancedRentalSelector({
     setSelectedCountry(null)
     setCurrentStep(2)
     setAdditionalServices(new Set())
+    setAdditionalServiceNames(new Map())
   }
 
   const handleCountrySelect = (country: Country) => {
@@ -175,12 +177,23 @@ export function EnhancedRentalSelector({
   }
 
   const handleRentClick = async () => {
-    if (!selectedService || !selectedCountry || !calculatedPricing) {
-      alert("Vui lòng chọn dịch vụ và quốc gia")
-      return
-    }
+    if (!selectedService || !selectedCountry || !selectedPrice || !calculatedPricing) return
 
-    setShowConfirmDialog(true)
+    setIsRenting(true)
+    try {
+      const additionalServicesArray =
+        rentalType === "multi-service"
+          ? (Array.from(additionalServices)
+              .map((id) => additionalServiceNames.get(id))
+              .filter(Boolean) as string[])
+          : undefined
+
+      setShowConfirmDialog(true)
+    } catch (error) {
+      console.error("Failed to prepare rental:", error)
+    } finally {
+      setIsRenting(false)
+    }
   }
 
   const handleConfirmRent = async () => {
@@ -457,8 +470,14 @@ export function EnhancedRentalSelector({
                                   const newSet = new Set(additionalServices)
                                   if (checked) {
                                     newSet.add(service.id)
+                                    setAdditionalServiceNames((prev) => new Map(prev).set(service.id, service.name))
                                   } else {
                                     newSet.delete(service.id)
+                                    setAdditionalServiceNames((prev) => {
+                                      const newMap = new Map(prev)
+                                      newMap.delete(service.id)
+                                      return newMap
+                                    })
                                   }
                                   setAdditionalServices(newSet)
                                 }}
@@ -499,7 +518,7 @@ export function EnhancedRentalSelector({
                           <RadioGroupItem value="24" id="24h" className="sr-only" />
                           <span className="text-xs font-medium">1 ngày</span>
                           <Badge variant="outline" className="text-[10px] py-0 bg-purple-100">
-                            -30%
+                            -20%
                           </Badge>
                         </Label>
                         <Label
@@ -511,7 +530,7 @@ export function EnhancedRentalSelector({
                           <RadioGroupItem value="168" id="168h" className="sr-only" />
                           <span className="text-xs font-medium">1 tuần</span>
                           <Badge variant="outline" className="text-[10px] py-0 bg-purple-100">
-                            -50%
+                            -30%
                           </Badge>
                         </Label>
                       </RadioGroup>
@@ -681,7 +700,7 @@ export function EnhancedRentalSelector({
           pricing={calculatedPricing}
           currentBalance={userBalance}
           onConfirm={handleConfirmRent}
-          additionalServices={rentalType === "multi-service" ? Array.from(additionalServices) : undefined}
+          additionalServices={rentalType === "multi-service" ? Array.from(additionalServiceNames.values()) : undefined}
           rentDurationHours={rentalType === "long-term" ? rentDuration : undefined}
         />
       )}
