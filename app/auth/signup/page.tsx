@@ -211,25 +211,35 @@ export default function SignupPage() {
                     disabled={isLoading}
                   />
                 </div>
-                <div className="flex items-center gap-2">
-                  <Checkbox
-                    id="terms"
-                    checked={acceptedTerms}
-                    onCheckedChange={(checked) => setAcceptedTerms(checked === true)}
-                    disabled={isLoading}
-                  />
-                  <Label htmlFor="terms" className="text-sm leading-none cursor-pointer">
-                    Tôi đồng ý với{" "}
-                    <Link href="/terms" target="_blank" className="text-primary hover:underline font-medium">
-                      Điều khoản sử dụng
-                    </Link>{" "}
-                    và{" "}
-                    <Link href="/privacy" target="_blank" className="text-primary hover:underline font-medium">
-                      Chính sách bảo mật
-                    </Link>
-                  </Label>
-                </div>
+<div className="flex items-start gap-2">
+  <input
+    id="terms"
+    type="checkbox"
+    checked={acceptedTerms}
+    onChange={(e) => setAcceptedTerms(e.target.checked)}
+    disabled={isLoading}
+    className="mt-[3px] h-4 w-4 rounded border border-gray-300 text-primary focus:ring-primary"
+  />
 
+  <label htmlFor="terms" className="text-sm leading-relaxed cursor-pointer">
+    Tôi đồng ý với{" "}
+    <Link
+      href="/terms"
+      target="_blank"
+      className="text-primary hover:underline font-medium"
+    >
+      Điều khoản sử dụng
+    </Link>{" "}
+    và{" "}
+    <Link
+      href="/privacy"
+      target="_blank"
+      className="text-primary hover:underline font-medium"
+    >
+      Chính sách bảo mật
+    </Link>
+  </label>
+</div>
                 {error && (
                   <Alert variant="destructive">
                     <AlertDescription>{error}</AlertDescription>
