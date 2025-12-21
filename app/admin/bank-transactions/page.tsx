@@ -35,7 +35,7 @@ export default async function BankTransactionsPage() {
         )
       `)
       .order("created_at", { ascending: false })
-      .limit(100)
+      .limit(50)
 
     if (result.error) {
       console.warn("[v0] JOIN query failed:", result.error.message)
@@ -53,7 +53,7 @@ export default async function BankTransactionsPage() {
       .from("bank_transactions")
       .select("*")
       .order("created_at", { ascending: false })
-      .limit(100)
+      .limit(50)
 
     transactions = result.data
     error = result.error

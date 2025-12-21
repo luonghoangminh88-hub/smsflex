@@ -6,6 +6,7 @@ import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import { AdminSidebar } from "@/components/admin-sidebar"
 import { AdminHeader } from "@/components/admin-header"
+import { Footer } from "@/components/footer"
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -25,11 +26,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   }
 
   return (
-    <div className="flex min-h-svh bg-background">
+    <div className="min-h-svh bg-background">
       <AdminSidebar />
-      <div className="flex-1 flex flex-col">
+      <div className="flex flex-col min-h-svh md:ml-64">
         <AdminHeader />
-        <main className="flex-1 overflow-y-auto p-6 md:p-8">{children}</main>
+        <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">{children}</main>
+        <Footer />
       </div>
     </div>
   )

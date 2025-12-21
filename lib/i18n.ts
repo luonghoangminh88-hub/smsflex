@@ -13,7 +13,7 @@ const translations = {
     },
     // Dashboard
     dashboard: {
-      subtitle: "Hệ thống thuê số điện thoại ảo",
+      subtitle: "Số Điện Thoại Ảo - OTPVIET",
       balance: "Số dư tài khoản",
       welcome: "Chào mừng",
       quickActions: "Thao tác nhanh",
@@ -21,7 +21,12 @@ const translations = {
     },
     // Rental
     rental: {
-      selectService: "Chọn dịch vụ và quốc gia để bắt đầu thuê số điện thoại ảo",
+      selectService: "Chọn dịch vụ và quốc gia",
+      selectServiceFirst: "Chọn dịch vụ",
+      selectServiceDescription:
+        "Vui lòng chọn dịch vụ và quốc gia từ bảng bên trái",
+      selectCountryNext: "Chọn quốc gia tiếp theo",
+      selectCountryDescription: "Chọn quốc gia từ danh sách bên dưới để xem giá",
       selectCountry: "Chọn quốc gia",
       selectServiceAndCountry: "Vui lòng chọn cả dịch vụ và quốc gia",
       errorRentingNumber: "Có lỗi xảy ra khi thuê số",
@@ -51,7 +56,7 @@ const translations = {
       experimental: "Thử nghiệm",
       experimentalWarning: "Dịch vụ này đang trong giai đoạn thử nghiệm",
       experimentalNote:
-        'Dịch vụ này sử dụng service code "other" - số điện thoại sẽ nhận được tất cả SMS từ các dịch vụ tương tự.',
+        'Dịch vụ này sử dụng service code - số điện thoại sẽ nhận được tất cả SMS từ các dịch vụ tương tự.',
     },
     // Common
     common: {
@@ -106,7 +111,7 @@ const translations = {
       failed: "Thất bại",
     },
   },
-  en: {
+en: {
     // Navigation
     nav: {
       home: "Home",
@@ -118,7 +123,7 @@ const translations = {
     },
     // Dashboard
     dashboard: {
-      subtitle: "Virtual Phone Number Rental System",
+      subtitle: "Virtual Phone Number - OTPVIET",
       balance: "Account Balance",
       welcome: "Welcome",
       quickActions: "Quick Actions",
@@ -126,10 +131,15 @@ const translations = {
     },
     // Rental
     rental: {
-      selectService: "Select a service and country to start renting a virtual phone number",
+      selectService: "Select Service and Country",
+      selectServiceFirst: "Select Service",
+      selectServiceDescription:
+        "Please select a service and country from the left panel",
+      selectCountryNext: "Select country next",
+      selectCountryDescription: "Select a country from the list below to see the price",
       selectCountry: "Select Country",
       selectServiceAndCountry: "Please select both service and country",
-      errorRentingNumber: "An error occurred while renting number",
+      errorRentingNumber: "An error occurred while renting the number",
       errorOccurred: "An error occurred",
       price: "Price",
       rentNumber: "Rent Number",
@@ -145,7 +155,7 @@ const translations = {
     },
     // Service
     service: {
-      search: "Search services...",
+      search: "Search service...",
       searchCountry: "Search country...",
       priceList: "Price List",
       statistics: "Statistics",
@@ -154,9 +164,9 @@ const translations = {
       inStock: "In Stock",
       availability: "Availability",
       experimental: "Experimental",
-      experimentalWarning: "This service is in experimental stage",
+      experimentalWarning: "This service is currently in experimental phase",
       experimentalNote:
-        'This service uses "other" service code - the phone number will receive all SMS from similar services.',
+        "This service uses a service code - the phone number will receive all SMS from similar services.",
     },
     // Common
     common: {
@@ -181,7 +191,7 @@ const translations = {
     error: {
       generic: "An error occurred. Please try again.",
       network: "Network connection error",
-      unauthorized: "You are not authorized",
+      unauthorized: "You do not have permission to access",
       notFound: "Not found",
       insufficientBalance: "Insufficient balance",
     },
@@ -194,7 +204,7 @@ const translations = {
       password: "Password",
       confirmPassword: "Confirm Password",
       forgotPassword: "Forgot Password?",
-      rememberMe: "Remember Me",
+      rememberMe: "Remember me",
     },
     // Transaction
     transaction: {

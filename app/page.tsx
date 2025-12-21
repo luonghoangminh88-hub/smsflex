@@ -24,7 +24,7 @@ export default function HomePage() {
       <div className="bg-primary text-primary-foreground py-2 px-4 text-center text-sm">
         <span className="inline-flex items-center gap-2">
           <TrendingUp className="h-4 w-4" />
-          Ưu đãi đặc biệt: Nạp lần đầu tặng thêm 10% - Chỉ trong tháng này!
+          Nhận OTP trong 30 giây – Hoàn tiền tự động nếu không nhận được mã
         </span>
       </div>
 
@@ -32,8 +32,8 @@ export default function HomePage() {
       <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Smartphone className="h-6 w-6 text-primary" />
-            <span className="font-bold text-xl">OTP Rental</span>
+            <img src="/logo-otpviet.jpg" alt="OTPVIET" className="h-8 w-8 rounded" />
+            <span className="font-bold text-xl">OTPVIET</span>
           </div>
           <div className="hidden md:flex items-center gap-6">
             <Link href="#features" className="text-sm hover:text-primary transition-colors">
@@ -64,16 +64,16 @@ export default function HomePage() {
               Đã có 10,000+ người dùng tin tưởng
             </div>
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold text-balance leading-tight">
-              Thuê SIM ảo nhận OTP <span className="text-primary">nhanh trong 30 giây</span>
+              Tối ưu xác minh tài khoản tự động <span className="text-primary">nhận OTP trong 30 giây</span>
             </h1>
             <p className="text-xl text-muted-foreground text-pretty leading-relaxed">
-              Giải pháp số 1 tại Việt Nam cho xác minh tài khoản. Hỗ trợ 200+ dịch vụ phổ biến, 50+ quốc gia, giá từ
-              2,000đ. Không cần đăng ký SIM thật, không rủi ro bị khóa tài khoản chính.
+              Giải pháp xác minh OTP tức thì cho mọi nền tảng: Telegram, Facebook, Google, Microsoft, Binance và hơn 200 dịch vụ khác.
+Hỗ trợ số ảo quốc tế từ 50+ quốc gia – phù hợp cho marketing, thử nghiệm sản phẩm và hoạt động đa tài khoản.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <Button asChild size="lg" className="text-lg h-12 px-8">
                 <Link href="/auth/signup">
-                  Dùng thử miễn phí
+                  Đăng ký ngay
                   <ChevronRight className="ml-2 h-5 w-5" />
                 </Link>
               </Button>
@@ -170,7 +170,7 @@ export default function HomePage() {
       {/* Features Section */}
       <section id="features" className="container mx-auto px-4 py-20">
         <div className="text-center space-y-4 max-w-3xl mx-auto mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold text-balance">Tại sao chọn OTP Rental?</h2>
+          <h2 className="text-4xl md:text-5xl font-bold text-balance">Tại sao chọn OTPVIET?</h2>
           <p className="text-xl text-muted-foreground text-pretty">
             Chúng tôi cung cấp dịch vụ thuê SIM ảo nhanh nhất, ổn định nhất và giá tốt nhất trên thị trường
           </p>
@@ -426,13 +426,13 @@ export default function HomePage() {
                   ))}
                 </div>
                 <p className="text-muted-foreground leading-relaxed">
-                  "Mình làm marketing cần tạo nhiều tài khoản Telegram. Dùng OTP Rental nhanh lắm, giá rẻ hơn các trang
+                  "Mình làm marketing cần tạo nhiều tài khoản Telegram. Dùng OTPVIET nhanh lắm, giá rẻ hơn các trang
                   khác, tiền auto hoàn nếu không nhận được OTP. Rất ưng!"
                 </p>
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-400 to-purple-400" />
                   <div>
-                    <div className="font-semibold">Nguyễn Văn A</div>
+                    <div className="font-semibold">Nguyễn </div>
                     <div className="text-sm text-muted-foreground">Digital Marketer</div>
                   </div>
                 </div>
@@ -447,13 +447,13 @@ export default function HomePage() {
                   ))}
                 </div>
                 <p className="text-muted-foreground leading-relaxed">
-                  "Giá rẻ nhất thị trường mà chất lượng tốt. Mình test qua 5-6 nền tảng, OTP Rental nhanh nhất và ít lỗi
+                  "Giá rẻ nhất thị trường mà chất lượng tốt. Mình test qua 5-6 nền tảng, OTPVIET nhanh nhất và ít lỗi
                   nhất. Support cũng nhiệt tình. 10/10!"
                 </p>
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-full bg-gradient-to-br from-green-400 to-blue-400" />
                   <div>
-                    <div className="font-semibold">Trần Thị B</div>
+                    <div className="font-semibold">Trần Thị Trang </div>
                     <div className="text-sm text-muted-foreground">Freelancer</div>
                   </div>
                 </div>
@@ -474,7 +474,7 @@ export default function HomePage() {
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-full bg-gradient-to-br from-orange-400 to-red-400" />
                   <div>
-                    <div className="font-semibold">Lê Văn C</div>
+                    <div className="font-semibold">Lê Hữu Xuân</div>
                     <div className="text-sm text-muted-foreground">Chủ shop online</div>
                   </div>
                 </div>
@@ -497,10 +497,10 @@ export default function HomePage() {
           <Accordion type="single" collapsible className="space-y-4">
             <AccordionItem value="item-1" className="border-2 rounded-lg px-6">
               <AccordionTrigger className="text-left font-semibold hover:no-underline">
-                OTP Rental là gì? Có hợp pháp không?
+                OTPVIET là gì? Có hợp pháp không?
               </AccordionTrigger>
               <AccordionContent className="text-muted-foreground leading-relaxed">
-                OTP Rental là dịch vụ cho thuê số điện thoại ảo tạm thời để nhận mã xác minh OTP. Dịch vụ hoàn toàn hợp
+                OTPVIET là dịch vụ cho thuê số điện thoại ảo tạm thời để nhận mã xác minh OTP. Dịch vụ hoàn toàn hợp
                 pháp tại Việt Nam và được sử dụng phổ biến bởi các freelancer, marketer, developer để test ứng dụng hoặc
                 tạo tài khoản phụ. Chúng tôi chỉ cung cấp số điện thoại, không lưu trữ nội dung tin nhắn sau khi giao
                 dịch hoàn tất.
@@ -523,7 +523,7 @@ export default function HomePage() {
                 Nếu không nhận được OTP thì sao?
               </AccordionTrigger>
               <AccordionContent className="text-muted-foreground leading-relaxed">
-                Nếu không nhận được OTP trong vòng 20 ph��t, hệ thống tự động hoàn tiền 100% về tài khoản của bạn. Bạn
+                Nếu không nhận được OTP trong vòng 20 phút, hệ thống tự động hoàn tiền 100% về tài khoản của bạn. Bạn
                 không cần liên hệ support hay làm bất kỳ thao tác nào. Tỷ lệ thành công của chúng tôi là 99.8%, rất hiếm
                 khi xảy ra trường hợp không nhận được OTP.
               </AccordionContent>
@@ -577,7 +577,7 @@ export default function HomePage() {
                 Tôi cần hỗ trợ thì liên hệ ai?
               </AccordionTrigger>
               <AccordionContent className="text-muted-foreground leading-relaxed">
-                Bạn có thể liên hệ support qua email support@otprental.com hoặc live chat trên website (góc dưới bên
+                Bạn có thể liên hệ support qua email support@otpviet.com hoặc live chat trên website (góc dưới bên
                 phải). Thời gian hỗ trợ: 8:00 - 22:00 hàng ngày. Chúng tôi cam kết phản hồi trong vòng 2 giờ làm việc.
               </AccordionContent>
             </AccordionItem>
@@ -590,7 +590,7 @@ export default function HomePage() {
         <div className="container mx-auto px-4 text-center space-y-8">
           <h2 className="text-4xl md:text-5xl font-bold text-white text-balance">Sẵn sàng nhận OTP trong 30 giây?</h2>
           <p className="text-xl text-white/90 text-pretty max-w-2xl mx-auto">
-            Tham gia cùng 10,000+ người dùng đang tin tưởng OTP Rental mỗi ngày. Nạp lần đầu tặng thêm 10%!
+            Tham gia cùng 10,000+ người dùng đang tin tưởng OTPVIET mỗi ngày. Nạp lần đầu tặng thêm 10%!
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button asChild size="lg" variant="secondary" className="text-lg h-12 px-8">
@@ -612,19 +612,21 @@ export default function HomePage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t bg-muted/50 py-12">
-        <div className="container mx-auto px-4">
+      <footer className="border-t bg-muted/50 mt-20">
+        <div className="container mx-auto px-4 py-12">
           <div className="grid md:grid-cols-4 gap-8 mb-8">
+            {/* Company Info */}
             <div className="space-y-4">
               <div className="flex items-center gap-2">
-                <Smartphone className="h-6 w-6 text-primary" />
-                <span className="font-bold text-xl">OTP Rental</span>
+                <img src="/logo-otpviet.jpg" alt="OTPVIET" className="h-8 w-8 rounded" />
+                <span className="font-bold text-xl">OTPVIET</span>
               </div>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                Giải pháp thuê SIM ảo nhận OTP số 1 tại Việt Nam. Nhanh chóng, an toàn, giá rẻ.
+              <p className="text-sm text-muted-foreground">
+                Giải pháp thuê SIM ảo số 1 Việt Nam. Nhanh chóng, an toàn, giá rẻ.
               </p>
             </div>
 
+            {/* Quick Links */}
             <div>
               <h3 className="font-semibold mb-4">Sản phẩm</h3>
               <ul className="space-y-2 text-sm text-muted-foreground">
@@ -639,32 +641,14 @@ export default function HomePage() {
                   </Link>
                 </li>
                 <li>
-                  <Link href="/dashboard" className="hover:text-primary transition-colors">
-                    Dashboard
-                  </Link>
-                </li>
-              </ul>
-            </div>
-
-            <div>
-              <h3 className="font-semibold mb-4">Hỗ trợ</h3>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>
                   <Link href="#faq" className="hover:text-primary transition-colors">
                     FAQ
                   </Link>
                 </li>
-                <li>
-                  <a href="mailto:support@otprental.com" className="hover:text-primary transition-colors">
-                    Email: support@otprental.com
-                  </a>
-                </li>
-                <li>
-                  <span>Hotline: 1900-xxxx</span>
-                </li>
               </ul>
             </div>
 
+            {/* Legal */}
             <div>
               <h3 className="font-semibold mb-4">Pháp lý</h3>
               <ul className="space-y-2 text-sm text-muted-foreground">
@@ -678,30 +662,32 @@ export default function HomePage() {
                     Chính sách bảo mật
                   </Link>
                 </li>
+              </ul>
+            </div>
+
+            {/* Support */}
+            <div>
+              <h3 className="font-semibold mb-4">Hỗ trợ</h3>
+              <ul className="space-y-2 text-sm text-muted-foreground">
                 <li>
-                  <Link href="/refund" className="hover:text-primary transition-colors">
-                    Chính sách hoàn tiền
-                  </Link>
+                  <a href="mailto:support@otpviet.com" className="hover:text-primary transition-colors">
+                    support@otpviet.com
+                  </a>
                 </li>
+                <li>Hỗ trợ 24/7</li>
               </ul>
             </div>
           </div>
 
-          <div className="border-t pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-sm text-muted-foreground">© 2025 OTP Rental. All rights reserved.</p>
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-muted-foreground">Chấp nhận thanh toán:</span>
-              <div className="flex items-center gap-2">
-                <div className="h-8 w-12 bg-muted rounded border flex items-center justify-center text-xs font-bold">
-                  VISA
-                </div>
-                <div className="h-8 w-12 bg-muted rounded border flex items-center justify-center text-xs font-bold">
-                  QR
-                </div>
-                <div className="h-8 w-12 bg-muted rounded border flex items-center justify-center text-xs font-bold">
-                  MOMO
-                </div>
-              </div>
+          <div className="border-t pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
+            <p>&copy; 2025 OTPVIET. Tất cả quyền được bảo lưu.</p>
+            <div className="flex gap-6">
+              <Link href="/terms" className="hover:text-primary transition-colors">
+                Điều khoản
+              </Link>
+              <Link href="/privacy" className="hover:text-primary transition-colors">
+                Bảo mật
+              </Link>
             </div>
           </div>
         </div>

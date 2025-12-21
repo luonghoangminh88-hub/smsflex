@@ -2,10 +2,9 @@ import { NextResponse } from "next/server"
 import { createServerClient } from "@supabase/ssr"
 import { cookies } from "next/headers"
 import { getSmsActivateClient } from "@/lib/sms-activate"
-import { getFreePriceInfo } from "@/lib/freeprice"
 
 /**
- * Admin endpoint to sync prices from SMS-Activate API with FreePrice support
+ * Admin endpoint to sync prices from SMS-Activate API
  */
 export async function POST() {
   try {
@@ -39,15 +38,8 @@ export async function POST() {
       .eq("key", "profit_margin_percentage")
       .single()
 
-    const { data: freePriceSetting } = await supabase
-      .from("system_settings")
-      .select("value")
-      .eq("key", "freeprice_enabled")
-      .single()
-
     const profitMarginPercentage = profitMarginSetting ? Number(profitMarginSetting.value) : 20
     const profitMultiplier = 1 + profitMarginPercentage / 100 // e.g., 20% = 1.2
-    const freePriceEnabled = freePriceSetting?.value === "true"
 
     // Get prices from SMS-Activate
     const smsClient = getSmsActivateClient()
@@ -63,7 +55,6 @@ export async function POST() {
 
     let updatedCount = 0
     let createdCount = 0
-    let freePriceCount = 0
 
     // Update service prices
     for (const country of countries) {
@@ -77,15 +68,6 @@ export async function POST() {
         const costPrice = servicePrice.cost
         const sellingPrice = costPrice * profitMultiplier
 
-        let freePriceData = null
-        if (freePriceEnabled) {
-          try {
-            freePriceData = await getFreePriceInfo(service.code, country.code)
-          } catch (error) {
-            console.error(`[v0] Failed to fetch FreePrice for ${service.code}:`, error)
-          }
-        }
-
         // Check if price exists
         const { data: existingPrice } = await supabase
           .from("service_prices")
@@ -94,34 +76,18 @@ export async function POST() {
           .eq("country_id", country.id)
           .single()
 
-        const priceUpdate: any = {
-          cost_price: costPrice,
-          price: sellingPrice,
-          stock_count: servicePrice.count,
-          is_available: servicePrice.count > 0,
-          updated_at: new Date().toISOString(),
-        }
-
-        if (freePriceData?.enabled) {
-          priceUpdate.freeprice_enabled = true
-          priceUpdate.freeprice_map = JSON.stringify(
-            Object.fromEntries(freePriceData.options.map((opt) => [opt.price.toString(), opt.count])),
-          )
-          priceUpdate.min_freeprice = freePriceData.minPrice
-          priceUpdate.max_freeprice = freePriceData.maxPrice
-          priceUpdate.recommended_freeprice = freePriceData.recommendedPrice
-          freePriceCount++
-        } else {
-          priceUpdate.freeprice_enabled = false
-          priceUpdate.freeprice_map = null
-          priceUpdate.min_freeprice = null
-          priceUpdate.max_freeprice = null
-          priceUpdate.recommended_freeprice = null
-        }
-
         if (existingPrice) {
           // Update existing price
-          await supabase.from("service_prices").update(priceUpdate).eq("id", existingPrice.id)
+          await supabase
+            .from("service_prices")
+            .update({
+              cost_price: costPrice,
+              price: sellingPrice,
+              stock_count: servicePrice.count,
+              is_available: servicePrice.count > 0,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", existingPrice.id)
 
           updatedCount++
         } else {
@@ -129,7 +95,10 @@ export async function POST() {
           await supabase.from("service_prices").insert({
             service_id: service.id,
             country_id: country.id,
-            ...priceUpdate,
+            cost_price: costPrice,
+            price: sellingPrice,
+            stock_count: servicePrice.count,
+            is_available: servicePrice.count > 0,
           })
 
           createdCount++
@@ -141,8 +110,6 @@ export async function POST() {
       success: true,
       message: `Synced prices with ${profitMarginPercentage}% profit margin`,
       profitMarginPercentage,
-      freePriceEnabled,
-      freePriceCount,
       updated: updatedCount,
       created: createdCount,
     })

@@ -36,6 +36,7 @@ export default function TransactionsPage() {
       .select("*")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
+      .limit(50) // Added limit of 50 for pagination
 
     if (data) {
       setTransactions(data)
@@ -166,7 +167,8 @@ export default function TransactionsPage() {
         <CardHeader>
           <CardTitle className="text-xl sm:text-2xl">Lịch sử giao dịch</CardTitle>
           <CardDescription>
-            Hiển thị {filteredTransactions.length} / {transactions.length} giao dịch
+            Hiển thị {filteredTransactions.length} giao dịch
+            {transactions.length >= 50 ? " (50 giao dịch gần nhất)" : ""}
           </CardDescription>
         </CardHeader>
         <CardContent className="p-4 sm:p-6">

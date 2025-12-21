@@ -57,17 +57,18 @@ export function DashboardHeader({ profile }: DashboardHeaderProps) {
       .toUpperCase() || profile.email[0].toUpperCase()
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-[#4a6fa5] text-white shadow-sm">
-      <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        <div className="flex items-center gap-3">
-          <h1 className="text-lg font-bold flex items-center gap-2">
-            <div className="bg-white/10 rounded-lg px-3 py-1.5">
-              <span className="text-white">OTP</span>
+    <header className="sticky top-0 z-50 w-full border-b gradient-primary text-white shadow-lg">
+      <div className="container mx-auto flex h-14 sm:h-16 items-center justify-between px-3 sm:px-4">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+          <a href="/dashboard" className="flex items-center gap-2">
+            <img src="/logo-otpviet.jpg" alt="OTPVIET" className="h-8 w-8 sm:h-10 sm:w-10" />
+            <div className="hidden sm:flex flex-col leading-tight">
+              <span className="text-base sm:text-lg font-bold">OTPVIET</span>
+              <span className="text-[10px] sm:text-xs text-white/80">Số Điện Thoại Ảo</span>
             </div>
-            <span className="hidden md:inline">{t("dashboard.subtitle")}</span>
-          </h1>
+          </a>
 
-          <nav className="hidden lg:flex items-center gap-1 text-sm ml-4">
+          <nav className="hidden xl:flex items-center gap-1 text-sm ml-4">
             <a
               href="/dashboard"
               className="px-3 py-2 rounded-md hover:bg-white/10 transition-colors font-medium min-h-[44px] flex items-center"
@@ -98,10 +99,10 @@ export function DashboardHeader({ profile }: DashboardHeaderProps) {
           </nav>
         </div>
 
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/10 min-h-[44px]">
-            <Wallet className="h-4 w-4" />
-            <span className="font-semibold text-sm sm:text-base">{formatVND(profile.balance)}</span>
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <div className="hidden xs:flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg bg-white/10 min-h-[40px] sm:min-h-[44px]">
+            <Wallet className="h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0" />
+            <span className="font-semibold text-xs sm:text-sm whitespace-nowrap">{formatVND(profile.balance)}</span>
           </div>
 
           <NotificationBell />
@@ -110,12 +111,12 @@ export function DashboardHeader({ profile }: DashboardHeaderProps) {
 
           <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="lg:hidden hover:bg-white/10 min-h-[44px] min-w-[44px]">
-                <Menu className="h-6 w-6" />
+              <Button variant="ghost" size="icon" className="xl:hidden hover:bg-white/10 min-h-[44px] min-w-[44px] p-2">
+                <Menu className="h-5 w-5 sm:h-6 sm:w-6" />
                 <span className="sr-only">Mở menu</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-[280px] sm:w-[320px] p-0">
+            <SheetContent side="right" className="w-[85vw] max-w-[320px] p-0">
               <div className="flex items-center justify-between p-4 border-b">
                 <h2 className="text-lg font-semibold">Menu</h2>
                 <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(false)} className="h-10 w-10">
@@ -123,46 +124,56 @@ export function DashboardHeader({ profile }: DashboardHeaderProps) {
                 </Button>
               </div>
 
-              <nav className="flex flex-col p-4 space-y-1">
+              <div className="xs:hidden p-4 border-b bg-secondary/50">
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-primary/10">
+                  <Wallet className="h-5 w-5 text-primary" />
+                  <div>
+                    <div className="text-xs text-muted-foreground">Số dư</div>
+                    <div className="text-lg font-bold">{formatVND(profile.balance)}</div>
+                  </div>
+                </div>
+              </div>
+
+              <nav className="flex flex-col p-4 space-y-2">
                 <a
                   href="/dashboard"
-                  className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-accent transition-colors min-h-[48px]"
+                  className="flex items-center gap-3 px-4 py-4 rounded-lg hover:bg-accent transition-colors min-h-[56px] font-medium"
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  <Wallet className="h-5 w-5" />
-                  <span className="font-medium">{t("nav.home")}</span>
+                  <Wallet className="h-5 w-5 flex-shrink-0" />
+                  <span>{t("nav.home")}</span>
                 </a>
                 <a
                   href="/dashboard/history"
-                  className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-accent transition-colors min-h-[48px]"
+                  className="flex items-center gap-3 px-4 py-4 rounded-lg hover:bg-accent transition-colors min-h-[56px] font-medium"
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  <History className="h-5 w-5" />
-                  <span className="font-medium">{t("nav.history")}</span>
+                  <History className="h-5 w-5 flex-shrink-0" />
+                  <span>{t("nav.history")}</span>
                 </a>
                 <a
                   href="/dashboard/transactions"
-                  className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-accent transition-colors min-h-[48px]"
+                  className="flex items-center gap-3 px-4 py-4 rounded-lg hover:bg-accent transition-colors min-h-[56px] font-medium"
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  <Receipt className="h-5 w-5" />
-                  <span className="font-medium">{t("nav.transactions")}</span>
+                  <Receipt className="h-5 w-5 flex-shrink-0" />
+                  <span>{t("nav.transactions")}</span>
                 </a>
                 <a
                   href="/dashboard/profile"
-                  className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-accent transition-colors min-h-[48px]"
+                  className="flex items-center gap-3 px-4 py-4 rounded-lg hover:bg-accent transition-colors min-h-[56px] font-medium"
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  <User className="h-5 w-5" />
-                  <span className="font-medium">{t("nav.profile")}</span>
+                  <User className="h-5 w-5 flex-shrink-0" />
+                  <span>{t("nav.profile")}</span>
                 </a>
                 <a
                   href="/dashboard/settings"
-                  className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-accent transition-colors min-h-[48px]"
+                  className="flex items-center gap-3 px-4 py-4 rounded-lg hover:bg-accent transition-colors min-h-[56px] font-medium"
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  <Settings className="h-5 w-5" />
-                  <span className="font-medium">{t("nav.settings")}</span>
+                  <Settings className="h-5 w-5 flex-shrink-0" />
+                  <span>{t("nav.settings")}</span>
                 </a>
 
                 {profile.role === "admin" && (
@@ -170,11 +181,11 @@ export function DashboardHeader({ profile }: DashboardHeaderProps) {
                     <div className="border-t my-2" />
                     <a
                       href="/admin"
-                      className="flex items-center gap-3 px-4 py-3 rounded-lg bg-yellow-100 dark:bg-yellow-900/30 hover:bg-yellow-200 dark:hover:bg-yellow-900/50 transition-colors min-h-[48px]"
+                      className="flex items-center gap-3 px-4 py-4 rounded-lg bg-yellow-100 dark:bg-yellow-900/30 hover:bg-yellow-200 dark:hover:bg-yellow-900/50 transition-colors min-h-[56px] font-medium"
                       onClick={() => setMobileMenuOpen(false)}
                     >
-                      <Shield className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
-                      <span className="font-medium text-yellow-900 dark:text-yellow-100">Quản trị</span>
+                      <Shield className="h-5 w-5 text-yellow-600 dark:text-yellow-400 flex-shrink-0" />
+                      <span className="text-yellow-900 dark:text-yellow-100">Quản trị</span>
                     </a>
                   </>
                 )}
@@ -185,10 +196,10 @@ export function DashboardHeader({ profile }: DashboardHeaderProps) {
                     setMobileMenuOpen(false)
                     handleLogout()
                   }}
-                  className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-destructive/10 text-destructive transition-colors min-h-[48px]"
+                  className="flex items-center gap-3 px-4 py-4 rounded-lg hover:bg-destructive/10 text-destructive transition-colors min-h-[56px] font-medium text-left w-full"
                 >
-                  <LogOut className="h-5 w-5" />
-                  <span className="font-medium">{t("nav.logout")}</span>
+                  <LogOut className="h-5 w-5 flex-shrink-0" />
+                  <span>{t("nav.logout")}</span>
                 </button>
               </nav>
             </SheetContent>
@@ -198,7 +209,7 @@ export function DashboardHeader({ profile }: DashboardHeaderProps) {
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
-                className="relative h-10 w-10 rounded-full hover:bg-white/10 hidden lg:flex min-h-[44px] min-w-[44px]"
+                className="relative h-10 w-10 rounded-full hover:bg-white/10 hidden xl:flex min-h-[44px] min-w-[44px]"
               >
                 <Avatar className="h-9 w-9">
                   <AvatarFallback className="bg-white/20 text-white">{initials}</AvatarFallback>
