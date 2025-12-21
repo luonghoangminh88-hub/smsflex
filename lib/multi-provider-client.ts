@@ -111,8 +111,11 @@ export async function checkStockAvailabilityWithPricing(
   let fiveSimStock = 0
   let fiveSimPrice: number | undefined
 
-  const canUseSmsActivate = await circuitBreaker.canMakeRequest("sms-activate")
-  const canUseFiveSim = await circuitBreaker.canMakeRequest("5sim")
+  const hasSmsActivateKey = !!process.env.SMS_ACTIVATE_API_KEY
+  const hasFiveSimKey = !!process.env.FIVESIM_API_KEY
+
+  const canUseSmsActivate = hasSmsActivateKey && (await circuitBreaker.canMakeRequest("sms-activate"))
+  const canUseFiveSim = hasFiveSimKey && (await circuitBreaker.canMakeRequest("5sim"))
 
   // Check SMS-Activate with Free Price
   if (canUseSmsActivate) {
@@ -143,7 +146,11 @@ export async function checkStockAvailabilityWithPricing(
       await circuitBreaker.recordFailure("sms-activate", error.message)
     }
   } else {
-    console.warn("[Stock Check] SMS-Activate circuit is open, skipping")
+    if (!hasSmsActivateKey) {
+      console.warn("[Stock Check] SMS-Activate API key not configured, skipping")
+    } else {
+      console.warn("[Stock Check] SMS-Activate circuit is open, skipping")
+    }
   }
 
   // Check 5sim
@@ -183,13 +190,25 @@ export async function checkStockAvailabilityWithPricing(
       await circuitBreaker.recordFailure("5sim", error.message)
     }
   } else {
-    console.warn("[Stock Check] 5sim circuit is open, skipping")
+    if (!hasFiveSimKey) {
+      console.warn("[Stock Check] 5sim API key not configured, skipping")
+    } else {
+      console.warn("[Stock Check] 5sim circuit is open, skipping")
+    }
   }
 
   let bestProvider: Provider = "sms-activate"
   let reason = "Default provider"
 
-  if (smsActivateStock === 0 && fiveSimStock === 0) {
+  if (!hasSmsActivateKey && !hasFiveSimKey) {
+    reason = "No API keys configured"
+  } else if (!hasSmsActivateKey) {
+    bestProvider = "5sim"
+    reason = "Only 5sim API key configured"
+  } else if (!hasFiveSimKey) {
+    bestProvider = "sms-activate"
+    reason = "Only SMS-Activate API key configured"
+  } else if (smsActivateStock === 0 && fiveSimStock === 0) {
     reason = "No stock available"
   } else if (smsActivateStock === 0) {
     bestProvider = "5sim"
@@ -261,7 +280,8 @@ export async function rentNumberWithFailover(countryCode: string, internalServic
     } catch (error: any) {
       await circuitBreaker.recordFailure("sms-activate", error.message)
 
-      // Try failover
+      console.error(`[Multi-Provider] SMS-Activate failed: ${error.message}`)
+
       if (stockCheck.fiveSim.count > 0) {
         console.log("[Multi-Provider] Failing over to 5sim")
         try {
@@ -270,6 +290,7 @@ export async function rentNumberWithFailover(countryCode: string, internalServic
           return result
         } catch (fiveSimError: any) {
           await circuitBreaker.recordFailure("5sim", fiveSimError.message)
+          console.error(`[Multi-Provider] 5sim also failed: ${fiveSimError.message}`)
           throw fiveSimError
         }
       }
@@ -283,7 +304,8 @@ export async function rentNumberWithFailover(countryCode: string, internalServic
     } catch (error: any) {
       await circuitBreaker.recordFailure("5sim", error.message)
 
-      // Try failover
+      console.error(`[Multi-Provider] 5sim failed: ${error.message}`)
+
       if (stockCheck.smsActivate.count > 0) {
         console.log("[Multi-Provider] Failing over to SMS-Activate")
         try {
@@ -292,6 +314,7 @@ export async function rentNumberWithFailover(countryCode: string, internalServic
           return result
         } catch (smsActivateError: any) {
           await circuitBreaker.recordFailure("sms-activate", smsActivateError.message)
+          console.error(`[Multi-Provider] SMS-Activate also failed: ${smsActivateError.message}`)
           throw smsActivateError
         }
       }
