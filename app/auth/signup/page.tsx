@@ -13,6 +13,7 @@ import { useState } from "react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { GoogleLoginButton } from "@/components/google-login-button"
 import { PasswordStrengthIndicator } from "@/components/password-strength-indicator"
+import { Checkbox } from "@/components/ui/checkbox"
 
 export default function SignupPage() {
   const [email, setEmail] = useState("")
@@ -20,6 +21,7 @@ export default function SignupPage() {
   const [confirmPassword, setConfirmPassword] = useState("")
   const [fullName, setFullName] = useState("")
   const [phoneNumber, setPhoneNumber] = useState("")
+  const [acceptedTerms, setAcceptedTerms] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
@@ -29,6 +31,12 @@ export default function SignupPage() {
     const supabase = createClient()
     setIsLoading(true)
     setError(null)
+
+    if (!acceptedTerms) {
+      setError("Bạn phải đồng ý với Điều khoản sử dụng và Chính sách bảo mật")
+      setIsLoading(false)
+      return
+    }
 
     if (password !== confirmPassword) {
       setError("Mật khẩu xác nhận không khớp")
@@ -203,6 +211,25 @@ export default function SignupPage() {
                     disabled={isLoading}
                   />
                 </div>
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="terms"
+                    checked={acceptedTerms}
+                    onCheckedChange={(checked) => setAcceptedTerms(checked === true)}
+                    disabled={isLoading}
+                  />
+                  <Label htmlFor="terms" className="text-sm leading-none cursor-pointer">
+                    Tôi đồng ý với{" "}
+                    <Link href="/terms" target="_blank" className="text-primary hover:underline font-medium">
+                      Điều khoản sử dụng
+                    </Link>{" "}
+                    và{" "}
+                    <Link href="/privacy" target="_blank" className="text-primary hover:underline font-medium">
+                      Chính sách bảo mật
+                    </Link>
+                  </Label>
+                </div>
+
                 {error && (
                   <Alert variant="destructive">
                     <AlertDescription>{error}</AlertDescription>

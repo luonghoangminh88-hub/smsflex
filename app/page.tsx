@@ -612,19 +612,21 @@ export default function HomePage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t bg-muted/50 py-12">
-        <div className="container mx-auto px-4">
+      <footer className="border-t bg-muted/50 mt-20">
+        <div className="container mx-auto px-4 py-12">
           <div className="grid md:grid-cols-4 gap-8 mb-8">
+            {/* Company Info */}
             <div className="space-y-4">
               <div className="flex items-center gap-2">
-                <Smartphone className="h-6 w-6 text-primary" />
+                <img src="/logo-otpviet.jpg" alt="OTPVIET" className="h-8 w-8 rounded" />
                 <span className="font-bold text-xl">OTPVIET</span>
               </div>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                Giải pháp thuê SIM ảo nhận OTP số 1 tại Việt Nam. Nhanh chóng, an toàn, giá rẻ.
+              <p className="text-sm text-muted-foreground">
+                Giải pháp thuê SIM ảo số 1 Việt Nam. Nhanh chóng, an toàn, giá rẻ.
               </p>
             </div>
 
+            {/* Quick Links */}
             <div>
               <h3 className="font-semibold mb-4">Sản phẩm</h3>
               <ul className="space-y-2 text-sm text-muted-foreground">
@@ -639,32 +641,14 @@ export default function HomePage() {
                   </Link>
                 </li>
                 <li>
-                  <Link href="/dashboard" className="hover:text-primary transition-colors">
-                    Dashboard
-                  </Link>
-                </li>
-              </ul>
-            </div>
-
-            <div>
-              <h3 className="font-semibold mb-4">Hỗ trợ</h3>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>
                   <Link href="#faq" className="hover:text-primary transition-colors">
                     FAQ
                   </Link>
                 </li>
-                <li>
-                  <a href="mailto:support@otpviet.com" className="hover:text-primary transition-colors">
-                    Email: support@otpviet.com
-                  </a>
-                </li>
-                <li>
-                  <span>Hotline: 1900-xxxx</span>
-                </li>
               </ul>
             </div>
 
+            {/* Legal */}
             <div>
               <h3 className="font-semibold mb-4">Pháp lý</h3>
               <ul className="space-y-2 text-sm text-muted-foreground">
@@ -678,34 +662,32 @@ export default function HomePage() {
                     Chính sách bảo mật
                   </Link>
                 </li>
+              </ul>
+            </div>
+
+            {/* Support */}
+            <div>
+              <h3 className="font-semibold mb-4">Hỗ trợ</h3>
+              <ul className="space-y-2 text-sm text-muted-foreground">
                 <li>
-                  <Link href="/refund" className="hover:text-primary transition-colors">
-                    Chính sách hoàn tiền
-                  </Link>
+                  <a href="mailto:support@otpviet.com" className="hover:text-primary transition-colors">
+                    support@otpviet.com
+                  </a>
                 </li>
+                <li>Hỗ trợ 24/7</li>
               </ul>
             </div>
           </div>
 
-          <div className="border-t pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-            <div className="flex items-center gap-2">
-              <img src="/logo-otpviet.jpg" alt="OTPVIET" className="h-8 w-8 rounded" />
-              <span className="font-bold text-xl">OTPVIET</span>
-            </div>
-            <p className="text-sm text-muted-foreground">© 2025 OTPVIET. All rights reserved.</p>
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-muted-foreground">Chấp nhận thanh toán:</span>
-              <div className="flex items-center gap-2">
-                <div className="h-8 w-12 bg-muted rounded border flex items-center justify-center text-xs font-bold">
-                  VISA
-                </div>
-                <div className="h-8 w-12 bg-muted rounded border flex items-center justify-center text-xs font-bold">
-                  QR
-                </div>
-                <div className="h-8 w-12 bg-muted rounded border flex items-center justify-center text-xs font-bold">
-                  MOMO
-                </div>
-              </div>
+          <div className="border-t pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
+            <p>&copy; 2025 OTPVIET. Tất cả quyền được bảo lưu.</p>
+            <div className="flex gap-6">
+              <Link href="/terms" className="hover:text-primary transition-colors">
+                Điều khoản
+              </Link>
+              <Link href="/privacy" className="hover:text-primary transition-colors">
+                Bảo mật
+              </Link>
             </div>
           </div>
         </div>

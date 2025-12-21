@@ -41,7 +41,7 @@ export function AdminSidebar() {
       try {
         setDismissedBadges(new Set(JSON.parse(stored)))
       } catch (e) {
-        // Silent fail for localStorage issues
+        console.error("[v0] Error loading dismissed badges:", e)
       }
     }
   }, [])
@@ -105,25 +105,27 @@ export function AdminSidebar() {
 
   return (
     <>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="fixed top-4 left-4 z-50 md:hidden"
+        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+      >
+        {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+      </Button>
+
       {isMobileMenuOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-40 md:hidden"
-          onClick={() => setIsMobileMenuOpen(false)}
-          aria-hidden="true"
-        />
+        <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={() => setIsMobileMenuOpen(false)} />
       )}
 
       <aside
         className={cn(
-          "fixed md:fixed inset-y-0 left-0 z-50 w-64 border-r bg-card flex flex-col transition-transform duration-300",
-          // On mobile: slide in/out based on menu state
+          "fixed md:static inset-y-0 left-0 z-40 w-64 border-r bg-card flex flex-col transition-transform duration-300 md:translate-x-0",
           isMobileMenuOpen ? "translate-x-0" : "-translate-x-full",
-          // On desktop: always visible
-          "md:translate-x-0",
         )}
       >
-        <div className="p-6 border-b flex items-center justify-between">
-          <div className="flex items-center gap-3 flex-1">
+        <div className="p-6 border-b">
+          <div className="flex items-center gap-3 mb-2">
             <img src="/logo-otpviet.jpg" alt="OTPVIET" className="h-10 w-10 rounded-lg" />
             <div>
               <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
@@ -132,9 +134,6 @@ export function AdminSidebar() {
               <p className="text-xs text-muted-foreground">Admin Panel</p>
             </div>
           </div>
-          <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setIsMobileMenuOpen(false)}>
-            <X className="h-5 w-5" />
-          </Button>
         </div>
 
         <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
@@ -172,16 +171,6 @@ export function AdminSidebar() {
           </Button>
         </div>
       </aside>
-
-      <Button
-        variant="ghost"
-        size="icon"
-        className="fixed top-4 left-4 z-[60] md:hidden min-h-[44px] min-w-[44px]"
-        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-      >
-        <Menu className="h-6 w-6" />
-        <span className="sr-only">Mở menu</span>
-      </Button>
     </>
   )
 }

@@ -155,6 +155,19 @@ export default function LoginPage() {
                   Đăng ký ngay
                 </Link>
               </div>
+
+              <div className="mt-6 pt-4 border-t text-center">
+                <p className="text-xs text-muted-foreground">
+                  Bằng việc đăng nhập, bạn đồng ý với{" "}
+                  <Link href="/terms" target="_blank" className="text-primary hover:underline">
+                    Điều khoản
+                  </Link>{" "}
+                  và{" "}
+                  <Link href="/privacy" target="_blank" className="text-primary hover:underline">
+                    Chính sách bảo mật
+                  </Link>
+                </p>
+              </div>
             </form>
           </CardContent>
         </Card>
