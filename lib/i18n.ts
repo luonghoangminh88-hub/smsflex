@@ -13,7 +13,7 @@ const translations = {
     },
     // Dashboard
     dashboard: {
-      subtitle: "Số Điện Thoại Ảo - OTPVIET",
+      subtitle: "Hệ thống thuê số điện thoại ảo",
       balance: "Số dư tài khoản",
       welcome: "Chào mừng",
       quickActions: "Thao tác nhanh",
@@ -21,12 +21,7 @@ const translations = {
     },
     // Rental
     rental: {
-      selectService: "Chọn dịch vụ và quốc gia",
-      selectServiceFirst: "Chọn dịch vụ",
-      selectServiceDescription:
-        "Vui lòng chọn dịch vụ và quốc gia từ bảng bên trái",
-      selectCountryNext: "Chọn quốc gia tiếp theo",
-      selectCountryDescription: "Chọn quốc gia từ danh sách bên dưới để xem giá",
+      selectService: "Chọn dịch vụ và quốc gia để bắt đầu thuê số điện thoại ảo",
       selectCountry: "Chọn quốc gia",
       selectServiceAndCountry: "Vui lòng chọn cả dịch vụ và quốc gia",
       errorRentingNumber: "Có lỗi xảy ra khi thuê số",
@@ -56,7 +51,7 @@ const translations = {
       experimental: "Thử nghiệm",
       experimentalWarning: "Dịch vụ này đang trong giai đoạn thử nghiệm",
       experimentalNote:
-        'Dịch vụ này sử dụng service code - số điện thoại sẽ nhận được tất cả SMS từ các dịch vụ tương tự.',
+        'Dịch vụ này sử dụng service code "other" - số điện thoại sẽ nhận được tất cả SMS từ các dịch vụ tương tự.',
     },
     // Common
     common: {
@@ -111,7 +106,7 @@ const translations = {
       failed: "Thất bại",
     },
   },
-en: {
+  en: {
     // Navigation
     nav: {
       home: "Home",
@@ -123,7 +118,7 @@ en: {
     },
     // Dashboard
     dashboard: {
-      subtitle: "Virtual Phone Number - OTPVIET",
+      subtitle: "Virtual Phone Number Rental System",
       balance: "Account Balance",
       welcome: "Welcome",
       quickActions: "Quick Actions",
@@ -131,15 +126,10 @@ en: {
     },
     // Rental
     rental: {
-      selectService: "Select Service and Country",
-      selectServiceFirst: "Select Service",
-      selectServiceDescription:
-        "Please select a service and country from the left panel",
-      selectCountryNext: "Select country next",
-      selectCountryDescription: "Select a country from the list below to see the price",
+      selectService: "Select a service and country to start renting a virtual phone number",
       selectCountry: "Select Country",
       selectServiceAndCountry: "Please select both service and country",
-      errorRentingNumber: "An error occurred while renting the number",
+      errorRentingNumber: "An error occurred while renting number",
       errorOccurred: "An error occurred",
       price: "Price",
       rentNumber: "Rent Number",
@@ -155,7 +145,7 @@ en: {
     },
     // Service
     service: {
-      search: "Search service...",
+      search: "Search services...",
       searchCountry: "Search country...",
       priceList: "Price List",
       statistics: "Statistics",
@@ -164,9 +154,9 @@ en: {
       inStock: "In Stock",
       availability: "Availability",
       experimental: "Experimental",
-      experimentalWarning: "This service is currently in experimental phase",
+      experimentalWarning: "This service is in experimental stage",
       experimentalNote:
-        "This service uses a service code - the phone number will receive all SMS from similar services.",
+        'This service uses "other" service code - the phone number will receive all SMS from similar services.',
     },
     // Common
     common: {
@@ -191,7 +181,7 @@ en: {
     error: {
       generic: "An error occurred. Please try again.",
       network: "Network connection error",
-      unauthorized: "You do not have permission to access",
+      unauthorized: "You are not authorized",
       notFound: "Not found",
       insufficientBalance: "Insufficient balance",
     },
@@ -204,7 +194,7 @@ en: {
       password: "Password",
       confirmPassword: "Confirm Password",
       forgotPassword: "Forgot Password?",
-      rememberMe: "Remember me",
+      rememberMe: "Remember Me",
     },
     // Transaction
     transaction: {

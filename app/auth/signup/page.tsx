@@ -13,7 +13,6 @@ import { useState } from "react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { GoogleLoginButton } from "@/components/google-login-button"
 import { PasswordStrengthIndicator } from "@/components/password-strength-indicator"
-import { Checkbox } from "@/components/ui/checkbox"
 
 export default function SignupPage() {
   const [email, setEmail] = useState("")
@@ -21,7 +20,6 @@ export default function SignupPage() {
   const [confirmPassword, setConfirmPassword] = useState("")
   const [fullName, setFullName] = useState("")
   const [phoneNumber, setPhoneNumber] = useState("")
-  const [acceptedTerms, setAcceptedTerms] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
@@ -31,12 +29,6 @@ export default function SignupPage() {
     const supabase = createClient()
     setIsLoading(true)
     setError(null)
-
-    if (!acceptedTerms) {
-      setError("Bạn phải đồng ý với Điều khoản sử dụng và Chính sách bảo mật")
-      setIsLoading(false)
-      return
-    }
 
     if (password !== confirmPassword) {
       setError("Mật khẩu xác nhận không khớp")
@@ -125,12 +117,9 @@ export default function SignupPage() {
     <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10 bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
-          <div className="flex items-center justify-center gap-3 mb-2">
-            <img src="/logo-otpviet.jpg" alt="OTPVIET" className="h-12 w-12 rounded-lg" />
-            <h1 className="text-4xl font-bold text-balance bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-              OTPVIET
-            </h1>
-          </div>
+          <h1 className="text-4xl font-bold text-balance bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+            OTP Rental
+          </h1>
           <p className="mt-2 text-muted-foreground">Tạo tài khoản mới</p>
         </div>
 
@@ -211,35 +200,6 @@ export default function SignupPage() {
                     disabled={isLoading}
                   />
                 </div>
-<div className="flex items-start gap-2">
-  <input
-    id="terms"
-    type="checkbox"
-    checked={acceptedTerms}
-    onChange={(e) => setAcceptedTerms(e.target.checked)}
-    disabled={isLoading}
-    className="mt-[3px] h-4 w-4 rounded border border-gray-300 text-primary focus:ring-primary"
-  />
-
-  <label htmlFor="terms" className="text-sm leading-relaxed cursor-pointer">
-    Tôi đồng ý với{" "}
-    <Link
-      href="/terms"
-      target="_blank"
-      className="text-primary hover:underline font-medium"
-    >
-      Điều khoản sử dụng
-    </Link>{" "}
-    và{" "}
-    <Link
-      href="/privacy"
-      target="_blank"
-      className="text-primary hover:underline font-medium"
-    >
-      Chính sách bảo mật
-    </Link>
-  </label>
-</div>
                 {error && (
                   <Alert variant="destructive">
                     <AlertDescription>{error}</AlertDescription>

@@ -49,7 +49,13 @@ export default async function AdminDashboardPage() {
     }, 0)
   }
 
-  const actualProfitMargin = totalRevenue > 0 ? ((totalProfit / totalRevenue) * 100).toFixed(1) : 0
+  const { data: profitMarginSetting } = await supabaseAdmin
+    .from("system_settings")
+    .select("value")
+    .eq("key", "profit_margin_percentage")
+    .single()
+
+  const currentProfitMargin = profitMarginSetting ? Number(profitMarginSetting.value) : 20
 
   // Recent rentals
   const { data: recentRentals } = await supabaseAdmin
@@ -65,14 +71,23 @@ export default async function AdminDashboardPage() {
     .order("created_at", { ascending: false })
     .limit(10)
 
+  console.log("[v0] Admin dashboard stats:", {
+    totalUsers,
+    totalRentals,
+    activeRentals,
+    totalRevenue,
+    totalProfit,
+  })
+
   return (
-    <div className="space-y-6 md:space-y-8">
+    <div className="p-8 space-y-8">
       <div>
-        <h1 className="text-2xl md:text-3xl font-bold">Tổng quan hệ thống</h1>
+        <h1 className="text-3xl font-bold">Tổng quan hệ thống</h1>
         <p className="text-muted-foreground mt-2">Thống kê và hoạt động gần đây</p>
       </div>
 
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+      {/* Stats Grid */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Tổng người dùng</CardTitle>
@@ -117,14 +132,14 @@ export default async function AdminDashboardPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-primary/50 bg-primary/5 sm:col-span-2 lg:col-span-2">
+        <Card className="border-primary/50 bg-primary/5">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Lợi nhuận</CardTitle>
             <DollarSign className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-primary">{totalProfit.toLocaleString("vi-VN")}đ</div>
-            <p className="text-xs text-muted-foreground">Margin: {actualProfitMargin}%</p>
+            <p className="text-xs text-muted-foreground">Margin: {currentProfitMargin}%</p>
           </CardContent>
         </Card>
       </div>
@@ -139,20 +154,17 @@ export default async function AdminDashboardPage() {
           <div className="space-y-4">
             {recentRentals && recentRentals.length > 0 ? (
               recentRentals.map((rental: any) => (
-                <div
-                  key={rental.id}
-                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b pb-3 last:border-0 gap-3"
-                >
-                  <div className="space-y-1 flex-1">
+                <div key={rental.id} className="flex items-center justify-between border-b pb-3 last:border-0">
+                  <div className="space-y-1">
                     <p className="font-medium">
                       {rental.service?.name} - {rental.country?.name}
                     </p>
-                    <p className="text-sm text-muted-foreground break-all">{rental.phone_number}</p>
+                    <p className="text-sm text-muted-foreground">{rental.phone_number}</p>
                     <p className="text-xs text-muted-foreground">
                       {rental.profile?.full_name || rental.profile?.email}
                     </p>
                   </div>
-                  <div className="text-left sm:text-right">
+                  <div className="text-right">
                     <StatusBadge status={rental.status} />
                     <p className="text-sm font-medium mt-1">{rental.price.toLocaleString("vi-VN")}đ</p>
                     <p className="text-xs text-muted-foreground">

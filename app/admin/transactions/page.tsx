@@ -17,7 +17,7 @@ export default async function AdminTransactionsPage() {
     `,
     )
     .order("created_at", { ascending: false })
-    .limit(50)
+    .limit(100)
 
   return (
     <div className="p-8 space-y-8">
@@ -29,7 +29,7 @@ export default async function AdminTransactionsPage() {
       <Card>
         <CardHeader>
           <CardTitle>Lịch sử giao dịch</CardTitle>
-          <CardDescription>50 giao dịch gần nhất</CardDescription>
+          <CardDescription>100 giao dịch gần nhất</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="mb-4">

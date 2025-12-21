@@ -3,7 +3,6 @@ import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import { DashboardHeader } from "@/components/dashboard-header"
 import type { Profile } from "@/lib/types"
-import { Footer } from "@/components/footer"
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -34,10 +33,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
   console.log("[v0] Dashboard layout: profile loaded successfully")
 
   return (
-    <div className="min-h-svh bg-background flex flex-col">
+    <div className="min-h-svh bg-background">
       <DashboardHeader profile={profile as Profile} />
-      <main className="flex-1">{children}</main>
-      <Footer />
+      <main>{children}</main>
     </div>
   )
 }

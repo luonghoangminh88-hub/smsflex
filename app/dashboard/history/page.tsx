@@ -29,7 +29,6 @@ export default async function HistoryPage() {
     )
     .eq("user_id", user.id)
     .order("created_at", { ascending: false })
-    .limit(50)
 
   return (
     <div className="container mx-auto px-4 sm:px-6 py-6 sm:py-8">
@@ -43,7 +42,7 @@ export default async function HistoryPage() {
       <Card className="border-2">
         <CardHeader>
           <CardTitle className="text-xl sm:text-2xl">Lịch sử thuê số</CardTitle>
-          <CardDescription>50 lượt thuê gần nhất của bạn</CardDescription>
+          <CardDescription>Tất cả các lượt thuê số của bạn</CardDescription>
         </CardHeader>
         <CardContent className="p-4 sm:p-6">
           {rentals && rentals.length > 0 ? (

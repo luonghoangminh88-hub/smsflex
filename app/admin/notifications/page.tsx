@@ -22,7 +22,7 @@ export default async function AdminNotificationsPage() {
       )
     `)
     .order("created_at", { ascending: false })
-    .limit(50)
+    .limit(100)
 
   if (error) {
     console.error("[v0] Error fetching notifications:", error)
@@ -88,7 +88,7 @@ export default async function AdminNotificationsPage() {
       <Card>
         <CardHeader>
           <CardTitle>Danh sách thông báo</CardTitle>
-          <CardDescription>50 thông báo gần nhất trong hệ thống</CardDescription>
+          <CardDescription>100 thông báo gần nhất trong hệ thống</CardDescription>
         </CardHeader>
         <CardContent>
           <AdminNotificationsClient initialNotifications={notifications || []} />

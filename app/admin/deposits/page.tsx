@@ -22,7 +22,7 @@ export default async function AdminDepositsPage() {
     `,
     )
     .order("created_at", { ascending: false })
-    .limit(50)
+    .limit(100)
 
   // Separate pending and processed deposits
   const pendingDeposits = deposits?.filter((d) => d.status === "pending") || []
@@ -109,7 +109,7 @@ export default async function AdminDepositsPage() {
       <Card>
         <CardHeader>
           <CardTitle>Lịch sử xử lý</CardTitle>
-          <CardDescription>50 giao dịch gần nhất</CardDescription>
+          <CardDescription>100 giao dịch gần nhất</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">

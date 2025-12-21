@@ -142,10 +142,8 @@ export default function DepositPage() {
 
   const handleCreateDeposit = async () => {
     const depositAmount = Number.parseInt(amount)
-    const minAmount = selectedMethodData?.min_amount || 10000
-
-    if (isNaN(depositAmount) || depositAmount < minAmount) {
-      setError(`Số tiền nạp tối thiểu là ${formatVND(minAmount)}`)
+    if (isNaN(depositAmount) || depositAmount < 10000) {
+      setError("Số tiền nạp tối thiểu là 10.000₫")
       return
     }
 
@@ -190,7 +188,6 @@ export default function DepositPage() {
   }
 
   const selectedMethodData = paymentMethods.find((m) => m.id === selectedMethod)
-  const minDepositAmount = selectedMethodData?.min_amount || 10000
 
   if (depositInfo) {
     const isCompleted = depositInfo.status === "completed"
@@ -458,7 +455,9 @@ export default function DepositPage() {
               disabled={isLoading}
               className="text-lg h-12"
             />
-            <p className="text-xs text-muted-foreground">Số tiền nạp tối thiểu: {formatVND(minDepositAmount)}</p>
+            <p className="text-xs text-muted-foreground">
+              Số tiền nạp tối thiểu: {formatVND(selectedMethodData?.min_amount || 10000)}
+            </p>
           </div>
 
           {error && (
@@ -467,7 +466,7 @@ export default function DepositPage() {
             </Alert>
           )}
 
-          {amount && Number.parseInt(amount) >= minDepositAmount && (
+          {amount && Number.parseInt(amount) >= 10000 && (
             <div className="p-4 bg-secondary rounded-lg space-y-2">
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Số tiền nạp</span>

@@ -8,11 +8,7 @@ export const dynamic = "force-dynamic"
 export default async function AdminUsersPage() {
   const supabase = await createAdminClient()
 
-  const { data: users } = await supabase
-    .from("profiles")
-    .select("*")
-    .order("created_at", { ascending: false })
-    .limit(50)
+  const { data: users } = await supabase.from("profiles").select("*").order("created_at", { ascending: false })
 
   return (
     <div className="p-8 space-y-8">
@@ -24,7 +20,7 @@ export default async function AdminUsersPage() {
       <Card>
         <CardHeader>
           <CardTitle>Danh sách người dùng</CardTitle>
-          <CardDescription>Hiển thị 50 người dùng gần nhất - Tổng số: {users?.length || 0}</CardDescription>
+          <CardDescription>Tổng số: {users?.length || 0} người dùng</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="mb-4">
